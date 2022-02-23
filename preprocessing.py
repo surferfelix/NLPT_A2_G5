@@ -3,7 +3,6 @@ import os
 import sys
 from nltk import pos_tag, WordNetLemmatizer
 from typing import List
-from utils import CONFIG
 
 
 # inspired by https://github.com/cltl/ma-ml4nlp-labs/blob/main/code/assignment3/CRF.py, extract_sents_from_conll
@@ -85,8 +84,8 @@ def main(paths=None) -> None:
     if not paths:  # if no paths are passed to the function
         paths = sys.argv[1:]
 
-    if not paths:  # if no paths are passed to the function through the command line
-        paths = [CONFIG['train_path'], CONFIG['dev_path']]
+    # if not paths:  # if no paths are passed to the function through the command line
+    #     paths = [CONFIG['train_path'], CONFIG['dev_path']]
 
     for path in paths:
         print(f'Preprocessing {os.path.basename(path)}')
