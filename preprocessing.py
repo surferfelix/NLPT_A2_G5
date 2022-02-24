@@ -5,11 +5,13 @@ import spacy
 from nltk import pos_tag, WordNetLemmatizer
 from typing import List
 
+
 def initialise_spacy():
     '''Loads a vocabulary to use
     :return: Loaded spacy vocabulary from en_core_web_sm'''
     nlp = spacy.load('en_core_web_sm')
     return nlp
+
 
 def spacy_tokenize_sentences(inp: str) -> list:
     '''Takes an input string as input and will return a list of all the tokens in that string
@@ -19,6 +21,7 @@ def spacy_tokenize_sentences(inp: str) -> list:
     doc = nlp(inp)
     return [token.text for token in doc]
 
+
 def spacy_fetch_lemmas(inp: str) -> list:
     '''Takes an input string as input and will return a list of all the lemmatized tokens in that string
     :param input: a string with text you want to retrieve lemmas for
@@ -26,6 +29,7 @@ def spacy_fetch_lemmas(inp: str) -> list:
     nlp = initialise_spacy()
     doc = nlp(inp)
     return [token.lemma for token in doc]
+
 
 # inspired by https://github.com/cltl/ma-ml4nlp-labs/blob/main/code/assignment3/CRF.py, extract_sents_from_conll
 def extract_tokenized_sentences(file_path: str) -> List[List[str]]:
@@ -46,6 +50,7 @@ def extract_tokenized_sentences(file_path: str) -> List[List[str]]:
     tokenized_sentences.append(sentence_tokens)  # append the last sentence; there is no empty line at the end of file
 
     return tokenized_sentences
+
 
 # inspired by
 # https://stackoverflow.com/questions/25534214/nltk-wordnet-lemmatizer-shouldnt-it-lemmatize-all-inflections-of-a-word
@@ -80,7 +85,7 @@ def lemmatize_pos_tagged_sentences(pos_tagged_sentences: List[List[tuple]]) -> L
 def generate_preprocessed_file(infile_path: str, outfile_path: str, lemmatized_sentences: List[List[str]],
                                pos_tagged_sentences: List[List[tuple]]) -> None:
     """Generate a new file containing information obtained through preprocessing."""
-    with open(outfile_path, 'w',  newline='', encoding='utf8') as outfile:
+    with open(outfile_path, 'w', newline='', encoding='utf8') as outfile:
         filewriter = csv.writer(outfile, delimiter='\t', quotechar='\\')
 
         with open(infile_path, 'r', encoding='utf8') as infile:
