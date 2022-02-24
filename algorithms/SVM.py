@@ -3,11 +3,10 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.feature_extraction import DictVectorizer
 import csv
 import sys
-from utils import evaluate_classifier, write_predictions_to_file, CONFIG
-
-
-# parts of the code are inspired by code available at https://github.com/cltl/ma-ml4nlp-labs/tree/main/code/assignment2
-
+from sklearn.metrics import classification_report, confusion_matrix
+from tabulate import tabulate
+import pandas as pd
+import os
 
 def extract_features_and_labels(file_path, selected_features):
     """Extract a set of features and gold labels from file."""
@@ -24,13 +23,12 @@ def extract_features_and_labels(file_path, selected_features):
                 if row[feature_name]:  # if there is a value for this feature
                     feature_dict[feature_name] = row[feature_name]
             features.append(feature_dict)
-            labels.append(row['gold_label'])
+            labels.append(row['predicate'])
 
     return features, labels
 
-
 def create_classifier(train_features, train_labels):
-    """Vectorize features and create classifier from training raw_data."""
+    """Vectorize features and create classifier from training data."""
 
     classifier = LinearSVC(random_state=42)
     vec = DictVectorizer()
@@ -38,7 +36,6 @@ def create_classifier(train_features, train_labels):
     classifier.fit(train_features_vectorized, train_labels)
         
     return classifier, vec
-
 
 def create_classifier_using_cross_validation(train_features, train_labels):
     """Vectorize features and create classifier using cross validation for parameter tuning."""
@@ -67,7 +64,6 @@ def create_classifier_using_cross_validation(train_features, train_labels):
 
     return grid.best_estimator_, vec
 
-
 def get_predicted_and_gold_labels(test_path, vectorizer, classifier, selected_features):
     """Vectorize test features and get predictions."""
 
@@ -81,7 +77,6 @@ def get_predicted_and_gold_labels(test_path, vectorizer, classifier, selected_fe
     predictions = classifier.predict(test_features_vectorized)
 
     return predictions, gold_labels
-
 
 def run_classifier_and_return_predictions_and_gold(train_path, test_path, selected_features, cross_validation=False):
     """Run classifier and get predictions using default parameters or cross validation."""
@@ -98,6 +93,45 @@ def run_classifier_and_return_predictions_and_gold(train_path, test_path, select
 
     return predictions, gold_labels
 
+def generate_confusion_matrix(predictions, gold_labels):
+    """Generate a confusion matrix."""
+
+    labels = sorted(set(gold_labels))
+    cf_matrix = confusion_matrix(gold_labels, predictions, labels=labels)
+    # transform confusion matrix into a dataframe
+    df_cf_matrix = pd.DataFrame(cf_matrix, index=labels, columns=labels)
+
+    return df_cf_matrix
+
+
+def calculate_precision_recall_f1_score(predictions, gold_labels, digits=3):
+    """Calculate evaluation metrics."""
+
+    # get the report in dictionary form
+    report = classification_report(gold_labels, predictions, zero_division=0, output_dict=True)
+    # remove unwanted metrics
+    report.pop('accuracy')
+    report.pop('weighted avg')
+    # transform dictionary into a dataframe and round the results
+    df_report = pd.DataFrame(report).transpose()
+    df_report = df_report.round(digits)
+    df_report['support'] = df_report['support'].astype(int)
+
+    return df_report 
+
+def evaluate_classifier(predictions, gold_labels, selected_features, name):
+    """Produce full evaluation of classifier."""
+
+    print(f"Evaluating {name.replace('_', ' ')} with {', '.join(selected_features)} as features:")
+
+    cf_matrix = generate_confusion_matrix(predictions, gold_labels)
+    report = calculate_precision_recall_f1_score(predictions, gold_labels)
+
+    print(tabulate(cf_matrix, headers='keys', tablefmt='psql'))
+    # print(cf_matrix.to_latex())  # print and paste to Overleaf
+
+    print(tabulate(report, headers='keys', tablefmt='psql'))
+    # print(report.to_latex())  # print and paste to Overleaf
 
 def run_and_evaluate_a_system(train_path, test_path, selected_features, name, cross_validation=False):
     """Run full classification and evaluation of a system."""
@@ -109,22 +143,27 @@ def run_and_evaluate_a_system(train_path, test_path, selected_features, name, cr
     else:
         print(f"Running {name.replace('_', ' ')}")
 
-    write_predictions_to_file(test_path, selected_features, predictions, name)
+    
     evaluate_classifier(predictions, gold_labels, selected_features, name)
+    
+    
+
+selected_features = ['token', 'lemma', 'pos_category', 'pos_tag', 'passive/active',
+                     'head', 'dep', 'rel', 'after']
 
 
 def main(paths=None) -> None:
-    """Run a baseline system with token as feature, run system with full set of features using default parameters
-    and cross validation"""
-
+    """Preprocess input file and save a preprocessed version of it."""
     if not paths:  # if no paths are passed to the function
         paths = sys.argv[1:]
 
     if not paths:  # if no paths are passed to the function through the command line
-        paths = [CONFIG['train_path'].replace('.txt', '_features.txt'),
-                 CONFIG['dev_path'].replace('.txt', '_features.txt')]
+        
+        paths = ['../data/en_ewt-up-train_preprocessed.conllu',
+                '../data/en_ewt-up-test_preprocessed.conllu']
 
-    train_path, test_path = paths
+        train_path = paths[0]
+        test_path = paths[1]
 
     # run baseline system
     name = "baseline_SVM"
@@ -133,8 +172,6 @@ def main(paths=None) -> None:
 
     # use the full set of features
     name = "system1_SVM"
-    selected_features = ['lemma', 'prev_lemma', 'next_lemma', 'pos_category', 'is_single_cue', 'has_affix', 'affix',
-                         'base_is_word', 'base']
 
     run_and_evaluate_a_system(train_path, test_path, selected_features, name)
 
