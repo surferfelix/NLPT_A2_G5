@@ -27,7 +27,6 @@ def spacy_fetch_lemmas(inp: str) -> list:
     doc = nlp(inp)
     return [token.lemma for token in doc]
 
-
 # inspired by https://github.com/cltl/ma-ml4nlp-labs/blob/main/code/assignment3/CRF.py, extract_sents_from_conll
 def extract_tokenized_sentences(file_path: str) -> List[List[str]]:
     """Extract a list of tokens for every sentence from the corpus and return it."""
