@@ -159,8 +159,8 @@ def main(paths=None) -> None:
 
     if not paths:  # if no paths are passed to the function through the command line
         
-        paths = ['../data/en_ewt-up-train_preprocessed.conllu',
-                '../data/en_ewt-up-test_preprocessed.conllu']
+        paths = ['../raw_data/en_ewt-up-train_preprocessed.conllu',
+                '../raw_data/en_ewt-up-test_preprocessed.conllu']
 
         train_path = paths[0]
         test_path = paths[1]

@@ -7,6 +7,7 @@ from extract_features import create_feature_files
 """ 1) Feature extraction """
 
 # saves feature to the 'processed_data/feature_file.tsv'
+# one needs to have proper word embeddings model downloaded to make it work
 create_feature_files()
 
 """ 2) Get predicate labels with simple rules """
