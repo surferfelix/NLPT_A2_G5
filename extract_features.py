@@ -1,7 +1,9 @@
+from tracemalloc import start
 import pandas as pd
 import csv
 from gensim.models import Word2Vec, KeyedVectors
 import spacy
+from spacy.tokens import Doc
 
 def preprocessing_raw_data(raw):
     '''Exports preprocessed raw data file'''
@@ -31,18 +33,31 @@ def preprocessing_raw_data(raw):
                 line_iter +=1
             writer.writerow([line_iter]+line)
 
-def fetch_tokens_from_data():
-    pass
+def fetch_tokens_from_data(input):
+    '''Returns a list of lists, where inner list represents sentence'''
+    tokens = pd.read_csv(input, sep = '\t', quotechar = '|').iloc[:,2]
+    sen_nrs = pd.read_csv(input, sep = '\t', quotechar = '|').iloc[:,1]
+    start_sen_index = 1
+    sentence_holder = []
+    container = []
+    for sen, token in zip(sen_nrs, tokens):
+        if int(sen) != start_sen_index:
+            sentence_holder.append(token)
+        else: 
+            start_sen_index += 1
+            container.append(sentence_holder)
+            sentence_holder.clear()
+            sentence_holder.append(token)
+    return container
+
 
 def initialise_spacy():
     '''Will initialise the Spacy NLP object'''
-    nlp = spacy.load('en_core_web_sm')
+    nlp = spacy.blank('en')
     return nlp
-
 
 def get_tokens(doc):
     return [token for token in doc]
-
 
 def get_embedding_representation_of_token(tokens: list, embeddingmodel='', dimensions=100) -> list:
     ''' Function to get the embedding representation of a token if this exists
@@ -73,13 +88,14 @@ def get_embedding_representation_of_token(tokens: list, embeddingmodel='', dimen
 
 def extract_features(input_data):
     '''Extracts the tokens, lemmas, and heads from the data
-    :type input_data: a pd.DataFrame object with 'Sentence' header'''
+    :type input_data: a pd.DataFrame object
+    '''
     tokens = []
-    sentences = input_data['Sentence']
+    sentences = fetch_tokens_from_data(input_data)
     heads = []
     nlp = initialise_spacy()
     for sentence in sentences:
-        doc = nlp(sentence)
+        doc = Doc(nlp.vocab, words = sentence)
         tokens_in_sentence = get_tokens(doc)
         for token in tokens_in_sentence:
             tokens.append(token)
@@ -88,7 +104,7 @@ def extract_features(input_data):
     return tokens, lemmas, heads
 
 
-def write_feature_out(tokens, lemmas, heads, embedding_model):
+def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
     '''Takes the features as input and writes a tsv file
     :param tokens: output of extract_features function
     :param lemmas: the lemmatized tokens, also output of extract_features function
@@ -97,27 +113,23 @@ def write_feature_out(tokens, lemmas, heads, embedding_model):
     '''
     tokens = [token.text for token in tokens]  # Need to conv for embedding loading
     embeddings = get_embedding_representation_of_token(tokens, embedding_model)
-    df = pd.DataFrame({'Tokens': tokens, 'Lemmas': lemmas, 'Heads': heads, 'Embeddings': embeddings})
-    df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|')
+    df = pd.DataFrame([*zip(tokens, lemmas, heads, embeddings)])
+    old_df = pd.read_csv(input_path, sep = '\t', quotechar = '|')
+    big_df = df.append(old_df, ignore_index=True)
+    big_df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|')
 
 
-def create_feature_files():
-    path_to_emb = ''  # Add path to embedding model here
-    print('Loading Embeddings')
-    embedding_model = KeyedVectors.load_word2vec_format(path_to_emb)
-    input_data = pd.read_csv("cleaned_data/en_ewp-up-train_clean_sentences.conllu", sep='\t')
+def create_feature_files(input_data, loaded_embeddings):
+    embedding_model = loaded_embeddings
     tokens, lemmas, heads = extract_features(input_data)
-    write_feature_out(tokens, lemmas, heads, embedding_model)
-
+    write_feature_out(tokens, lemmas, heads, embedding_model, input_data)
 
 if __name__ == '__main__':
-    input_data = 'raw_data/en_ewt-up-test.conllu'
-    preprocessing_raw_data(input_data)
-    # input_data = pd.read_csv("cleaned_data/en_ewp-up-train_clean_sentences.conllu", sep='\t')
-    # path_to_emb = '' # Add path to embedding model here
-    # print('Loading Embeddings')
-    # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
-    # print('Embeddings loaded...')
-    # print('Iterating over data..')
-    # main(input_data, loaded_embeddings)
-    # print('Done')
+    input_data = "cleaned_data/clean_raw_train_data.tsv"
+    path_to_emb = '/Volumes/Samsung_T5/Text_Mining/Models/enwiki_20180420_100d.txt' # Add path to embedding model here
+    print('Loading Embeddings')
+    loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
+    print('Embeddings loaded...')
+    print('Iterating over data..')
+    create_feature_files(input_data, loaded_embeddings)
+    print('Done')
