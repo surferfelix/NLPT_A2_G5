@@ -50,6 +50,10 @@ def get_sentence_predicates_and_arguments(raw_data):
     predicate_list = []
     arguments_list = []
     token_list = []
+
+
+    # TODO: modify it to work with new data input
+
     for i in range(len(data['Sentence'])):
         sentence = data['Sentence'][i]
         doc = nlp(sentence)
