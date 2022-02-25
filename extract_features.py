@@ -1,6 +1,38 @@
 import pandas as pd
+import csv
 from gensim.models import Word2Vec, KeyedVectors
 import spacy
+
+def preprocessing_raw_data(raw):
+    '''Exports preprocessed raw data file'''
+    container = [] # List of lists 
+    with open(raw) as raw_file:
+        in_raw = csv.reader(raw_file, delimiter = '\t', quotechar = '|')
+        for row in in_raw:
+            if row:
+                if row[0].startswith('#'):
+                    continue
+                else:
+                    container.append(row)
+
+    with open('cleaned_data/clean_raw_test_data.tsv', 'w') as output_file:
+        writer = csv.writer(output_file, delimiter = '\t', quotechar = '|')
+        # Getting the max line size
+        padding_limit = max([len(line) for line in container])
+        sentence_nr = []
+        line_iter = 0
+        for line in container:
+            while len(line) != padding_limit:
+                line.append('_')
+            try:
+                if int(line[0]) == 1: # New line
+                    line_iter += 1
+            except ValueError: # Some lines have periods in the index
+                line_iter +=1
+            writer.writerow([line_iter]+line)
+
+def fetch_tokens_from_data():
+    pass
 
 def initialise_spacy():
     '''Will initialise the Spacy NLP object'''
@@ -68,11 +100,13 @@ def main(input_data, embedding_model):
     write_feature_out(tokens, lemmas, heads, embedding_model)
 
 if __name__ == '__main__':
-    input_data = pd.read_csv("cleaned_data/en_ewp-up-train_clean_sentences.conllu", sep='\t')
-    path_to_emb = '' # Add path to embedding model here
-    print('Loading Embeddings')
-    loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
-    print('Embeddings loaded...')
-    print('Iterating over data..')
-    main(input_data, loaded_embeddings)
-    print('Done')
+    input_data = 'raw_data/en_ewt-up-test.conllu'
+    preprocessing_raw_data(input_data)
+    # input_data = pd.read_csv("cleaned_data/en_ewp-up-train_clean_sentences.conllu", sep='\t')
+    # path_to_emb = '' # Add path to embedding model here
+    # print('Loading Embeddings')
+    # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
+    # print('Embeddings loaded...')
+    # print('Iterating over data..')
+    # main(input_data, loaded_embeddings)
+    # print('Done')
