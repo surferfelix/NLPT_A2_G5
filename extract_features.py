@@ -2,15 +2,18 @@ import pandas as pd
 from gensim.models import Word2Vec, KeyedVectors
 import spacy
 
+
 def initialise_spacy():
     '''Will initialise the Spacy NLP object'''
     nlp = spacy.load('en_core_web_sm')
     return nlp
 
+
 def get_tokens(doc):
     return [token for token in doc]
 
-def get_embedding_representation_of_token(tokens: list, embeddingmodel = '', dimensions = 100) -> list:
+
+def get_embedding_representation_of_token(tokens: list, embeddingmodel='', dimensions=100) -> list:
     ''' Function to get the embedding representation of a token if this exists
     :param tokens: spacy doc object for the token
     :param embeddingmodel: a loaded w2v style pre-trained embedding model
@@ -19,12 +22,13 @@ def get_embedding_representation_of_token(tokens: list, embeddingmodel = '', dim
     vector_reps = []
     if not embeddingmodel:
         tokens = [token.text for token in tokens]
-        language_model = Word2Vec(tokens, min_count=200) # Change min_count for smaller datasets (needs to be proportional)
+        language_model = Word2Vec(tokens,
+                                  min_count=200)  # Change min_count for smaller datasets (needs to be proportional)
         language_model = language_model.wv
         if dimensions != 100:
             print('WARNING: No pre-trained embedding models only support 100 dimensions...\n')
             print('\nSetting dimensions to 100')
-            dimensions= 100
+            dimensions = 100
     elif embeddingmodel:
         language_model = embeddingmodel
     for token in tokens:
@@ -34,6 +38,7 @@ def get_embedding_representation_of_token(tokens: list, embeddingmodel = '', dim
             vector = [0] * dimensions
         vector_reps.append(vector)
     return vector_reps
+
 
 def extract_features(input_data):
     '''Extracts the tokens, lemmas, and heads from the data
@@ -51,6 +56,7 @@ def extract_features(input_data):
     lemmas = [token.lemma_ for token in tokens]
     return tokens, lemmas, heads
 
+
 def write_feature_out(tokens, lemmas, heads, embedding_model):
     '''Takes the features as input and writes a tsv file
     :param tokens: output of extract_features function
@@ -58,21 +64,21 @@ def write_feature_out(tokens, lemmas, heads, embedding_model):
     :param heads: the heads of the sentences, also output of extract_features function
     :embedding_model: a loaded w2v embedding_model
     '''
-    tokens = [token.text for token in tokens] # Need to conv for embedding loading
+    tokens = [token.text for token in tokens]  # Need to conv for embedding loading
     embeddings = get_embedding_representation_of_token(tokens, embedding_model)
-    df= pd.DataFrame({'Tokens': tokens, 'Lemmas': lemmas, 'Heads': heads, 'Embeddings': embeddings})
-    df.to_csv('processed_data/feature_file.tsv', sep = '\t', quotechar = '|')
+    df = pd.DataFrame({'Tokens': tokens, 'Lemmas': lemmas, 'Heads': heads, 'Embeddings': embeddings})
+    df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|')
 
-def main(input_data, embedding_model):
+
+def create_feature_files():
+    path_to_emb = ''  # Add path to embedding model here
+    print('Loading Embeddings')
+    embedding_model = KeyedVectors.load_word2vec_format(path_to_emb)
+    input_data = pd.read_csv("cleaned_data/en_ewp-up-train_clean_sentences.conllu", sep='\t')
     tokens, lemmas, heads = extract_features(input_data)
     write_feature_out(tokens, lemmas, heads, embedding_model)
 
+
 if __name__ == '__main__':
-    input_data = pd.read_csv("cleaned_data/en_ewp-up-train_clean_sentences.conllu", sep='\t')
-    path_to_emb = '' # Add path to embedding model here
-    print('Loading Embeddings')
-    loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
-    print('Embeddings loaded...')
-    print('Iterating over data..')
-    main(input_data, loaded_embeddings)
+    create_feature_files()
     print('Done')
