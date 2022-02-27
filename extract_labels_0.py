@@ -2,8 +2,10 @@
 
 import spacy
 import pandas as pd
+import spacy
+from spacy.tokens import Doc
 
-nlp = spacy.load("en_core_web_sm")
+# nlp = spacy.load("en_core_web_sm")
 
 # object and subject constants
 OBJECT_DEPS = {"dobj", "dative", "attr", "oprd"}
@@ -43,32 +45,42 @@ def is_question(doc):
     return False, ""
 
 
-def get_sentence_predicates_and_arguments(raw_data):
-    data = raw_data.copy()
+def initialise_spacy():
+    ''' Will initialise the Spacy NLP object '''
+    nlp = spacy.blank('en')
+    return nlp
 
+
+def get_sentence_predicates_and_arguments(input_path: str):
     subject_list = []
     predicate_list = []
     arguments_list = []
-    token_list = []
+    tokens = []
 
+    df = pd.read_csv(input_path, sep='\t', quotechar='|', header=None)
+    df_temp = df.iloc[:, [0, 2]]
+    df_temp.columns = ['sentence_no', 'tokens']
+    df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
 
-    # TODO: modify it to work with new data input
+    nlp = initialise_spacy()
+    sentences = list(df_temp['tokens'])
 
-    for i in range(len(data['Sentence'])):
-        sentence = data['Sentence'][i]
-        doc = nlp(sentence)
+    for i in range(len(sentences)):
+        sentence = sentences[i]
+        # sentence = [x for x in sentence if x]
+        doc = Doc(nlp.vocab, words=sentence)
+
         subject, verb, attribute = extract_svo(doc)
-
         subject_list.append([subject])
         predicate_list.append([verb])
         arguments_list.append([attribute])
-        tokens = [token.text for token in doc]
-        token_list.append(tokens)
+        tokens.append(sentence)
+
+    data = pd.DataFrame({"tokens": tokens})
 
     data['subject'] = subject_list
     data['predicate'] = predicate_list
     data['arguments'] = arguments_list
-    data['tokens'] = token_list
     return data
 
 
@@ -80,11 +92,11 @@ def create_tokens_predicate_dataframe(data):
             arguments = data['arguments'][j][0]
             token = data['tokens'][j][k]
             if token in predicate:
-                predicate_argument_list.append({"number": j, "token": token, "if_predicate": 1, "if_argument": 0})
+                predicate_argument_list.append({"number": j+1, "token": token, "if_predicate": 1, "if_argument": 0})
             elif token in arguments:
-                predicate_argument_list.append({"number": j, "token": token, "if_predicate": 0, "if_argument": 1})
+                predicate_argument_list.append({"number": j+1, "token": token, "if_predicate": 0, "if_argument": 1})
             else:
-                predicate_argument_list.append({"number": j, "token": token, "if_predicate": 0, "if_argument": 0})
+                predicate_argument_list.append({"number": j+1, "token": token, "if_predicate": 0, "if_argument": 0})
 
     predicate_df = pd.DataFrame(predicate_argument_list)
     return predicate_df
@@ -93,13 +105,9 @@ def create_tokens_predicate_dataframe(data):
 # gather the user input and gather the info
 
 if __name__ == "__main__":
-    input_data = pd.read_csv("cleaned_data/en_ewp-up-train_clean_sentences.conllu", sep='\t')
-
+    input_data = "cleaned_data/clean_raw_train_data.tsv"
     final_data = get_sentence_predicates_and_arguments(input_data)
-    final_data[['Sentence', 'tokens']].to_csv("cleaned_data/clean_sentences.csv")
 
     predicate_argument_df = create_tokens_predicate_dataframe(final_data)
     predicate_argument_df.to_csv("processed_data/pred_arg_labels_0.csv")
 
-    clean_tokens = predicate_argument_df[['number', 'token']]
-    clean_tokens.to_csv("cleaned_data/clean_tokens.csv")
