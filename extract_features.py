@@ -5,11 +5,12 @@ from gensim.models import Word2Vec, KeyedVectors
 import spacy
 from spacy.tokens import Doc
 
+
 def preprocessing_raw_data(raw):
     '''Exports preprocessed raw data file'''
-    container = [] # List of lists 
+    container = []  # List of lists
     with open(raw) as raw_file:
-        in_raw = csv.reader(raw_file, delimiter = '\t', quotechar = '|')
+        in_raw = csv.reader(raw_file, delimiter='\t', quotechar='|')
         for row in in_raw:
             if row:
                 if row[0].startswith('#'):
@@ -18,7 +19,7 @@ def preprocessing_raw_data(raw):
                     container.append(row)
 
     with open('cleaned_data/clean_raw_test_data.tsv', 'w') as output_file:
-        writer = csv.writer(output_file, delimiter = '\t', quotechar = '|')
+        writer = csv.writer(output_file, delimiter='\t', quotechar='|')
         # Getting the max line size
         padding_limit = max([len(line) for line in container])
         sentence_nr = []
@@ -27,23 +28,24 @@ def preprocessing_raw_data(raw):
             while len(line) != padding_limit:
                 line.append('_')
             try:
-                if int(line[0]) == 1: # New line
+                if int(line[0]) == 1:  # New line
                     line_iter += 1
-            except ValueError: # Some lines have periods in the index
-                line_iter +=1
-            writer.writerow([line_iter]+line)
+            except ValueError:  # Some lines have periods in the index
+                line_iter += 1
+            writer.writerow([line_iter] + line)
+
 
 def fetch_tokens_from_data(input):
     '''Returns a list of lists, where inner list represents sentence'''
-    tokens = pd.read_csv(input, sep = '\t', quotechar = '|').iloc[:,2]
-    sen_nrs = pd.read_csv(input, sep = '\t', quotechar = '|').iloc[:,1]
+    tokens = pd.read_csv(input, sep='\t', quotechar='|', header=None).iloc[:, 2]
+    sen_nrs = pd.read_csv(input, sep='\t', quotechar='|', header=None).iloc[:, 1]
     start_sen_index = 1
     sentence_holder = []
     container = []
     for sen, token in zip(sen_nrs, tokens):
         if int(sen) != start_sen_index:
             sentence_holder.append(token)
-        else: 
+        else:
             start_sen_index += 1
             container.append(sentence_holder)
             sentence_holder.clear()
@@ -56,8 +58,10 @@ def initialise_spacy():
     nlp = spacy.blank('en')
     return nlp
 
+
 def get_tokens(doc):
     return [token for token in doc]
+
 
 def get_embedding_representation_of_token(tokens: list, embeddingmodel='', dimensions=100) -> list:
     ''' Function to get the embedding representation of a token if this exists
@@ -91,11 +95,19 @@ def extract_features(input_data):
     :type input_data: a pd.DataFrame object
     '''
     tokens = []
-    sentences = fetch_tokens_from_data(input_data)
     heads = []
+
+    df = pd.read_csv(input_data, sep='\t', quotechar='|', header=None)
+    df_temp = df.iloc[:, [0, 2]]
+    df_temp.columns = ['sentence_no', 'tokens']
+    df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
+
     nlp = initialise_spacy()
-    for sentence in sentences:
-        doc = Doc(nlp.vocab, words = sentence)
+    sentences = list(df_temp['tokens'])
+
+    for i in range(len(sentences)):
+        sentence = sentences[i]
+        doc = Doc(nlp.vocab, words=sentence)
         tokens_in_sentence = get_tokens(doc)
         for token in tokens_in_sentence:
             tokens.append(token)
@@ -112,9 +124,11 @@ def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
     :embedding_model: a loaded w2v embedding_model
     '''
     tokens = [token.text for token in tokens]  # Need to conv for embedding loading
-    embeddings = get_embedding_representation_of_token(tokens, embedding_model)
-    df = pd.DataFrame([*zip(tokens, lemmas, heads, embeddings)])
-    old_df = pd.read_csv(input_path, sep = '\t', quotechar = '|')
+    # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
+    # df = pd.DataFrame([*zip(tokens, lemmas, heads, embeddings)])
+
+    df = pd.DataFrame([*zip(tokens, lemmas, heads)])
+    old_df = pd.read_csv(input_path, sep='\t', quotechar='|')
     big_df = df.append(old_df, ignore_index=True)
     big_df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|')
 
@@ -124,12 +138,14 @@ def create_feature_files(input_data, loaded_embeddings):
     tokens, lemmas, heads = extract_features(input_data)
     write_feature_out(tokens, lemmas, heads, embedding_model, input_data)
 
+
 if __name__ == '__main__':
     input_data = "cleaned_data/clean_raw_train_data.tsv"
-    path_to_emb = '/Volumes/Samsung_T5/Text_Mining/Models/enwiki_20180420_100d.txt' # Add path to embedding model here
+    path_to_emb = 'wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
-    loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
+    # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
     print('Embeddings loaded...')
     print('Iterating over data..')
+    loaded_embeddings = ''
     create_feature_files(input_data, loaded_embeddings)
     print('Done')
