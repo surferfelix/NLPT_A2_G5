@@ -1,4 +1,3 @@
-from tracemalloc import start
 import pandas as pd
 import csv
 from gensim.models import Word2Vec, KeyedVectors
@@ -55,7 +54,7 @@ def fetch_tokens_from_data(input):
 
 def initialise_spacy():
     '''Will initialise the Spacy NLP object'''
-    nlp = spacy.blank('en')
+    nlp = spacy.load('en_core_web_sm')
     return nlp
 
 
