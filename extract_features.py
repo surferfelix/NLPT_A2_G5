@@ -126,10 +126,10 @@ def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
     # df = pd.DataFrame([*zip(tokens, lemmas, heads, embeddings)])
 
-    df = pd.DataFrame([*zip(tokens, lemmas, heads)])
-    old_df = pd.read_csv(input_path, sep='\t', quotechar='|')
-    big_df = df.append(old_df, ignore_index=True)
-    big_df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|')
+    df = pd.DataFrame(*[zip(tokens, lemmas, heads)])
+    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = None)
+    big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
+    big_df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|', header = None)
 
 
 def create_feature_files(input_data, loaded_embeddings):
