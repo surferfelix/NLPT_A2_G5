@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import pandas as pd
 import csv
 from gensim.models import Word2Vec, KeyedVectors
@@ -93,25 +94,41 @@ def extract_features(input_data):
     '''Extracts the tokens, lemmas, and heads from the data
     :type input_data: a pd.DataFrame object
     '''
+    def custom_tokenizer(text): # https://stackoverflow.com/questions/53594690/is-it-possible-to-use-spacy-with-already-tokenized-input
+        if text in token_dict:
+            return Doc(nlp.vocab, token_dict[text])
+        else:
+            raise ValueError('No tokenization available for input')
+    
+    token_dict = {}
     tokens = []
     heads = []
-
+    lemmas = []
+        
     df = pd.read_csv(input_data, sep='\t', quotechar='|', header=None)
     df_temp = df.iloc[:, [0, 2]]
     df_temp.columns = ['sentence_no', 'tokens']
     df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
 
     nlp = initialise_spacy()
-    sentences = list(df_temp['tokens'])
 
-    for i in range(len(sentences)):
-        sentence = sentences[i]
-        doc = Doc(nlp.vocab, words=sentence)
+    nlp.tokenizer = custom_tokenizer
+    sentences = list(df_temp['tokens'])
+    
+    for sentence in sentences: # Initializing tokenizer dict
+        full_text = ' '.join(sentence)
+        token_dict[full_text] = sentence
+
+    for sentence in sentences: # Need to do this twice since now the tokenizer dict is initialized
+        doc = nlp(' '.join(sentence))
         tokens_in_sentence = get_tokens(doc)
-        for token in tokens_in_sentence:
+        for token in doc:
             tokens.append(token)
-    heads = [token.head.text for token in tokens]
-    lemmas = [token.lemma_ for token in tokens]
+            heads.append(token.head.text)
+            lemmas.append(token.lemma_)
+
+    # heads = [tok.head.text for tok in tokens]
+    # lemmas = [tok.lemma_ for tok in tokens]
     return tokens, lemmas, heads
 
 
@@ -122,10 +139,10 @@ def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
     :param heads: the heads of the sentences, also output of extract_features function
     :embedding_model: a loaded w2v embedding_model
     '''
-    tokens = [token.text for token in tokens]  # Need to conv for embedding loading
+    # tokens = [token.text for token in tokens]  # Need to conv for embedding loading
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
     # df = pd.DataFrame([*zip(tokens, lemmas, heads, embeddings)])
-
+    print(tokens, lemmas, heads)
     df = pd.DataFrame(*[zip(tokens, lemmas, heads)])
     old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = None)
     big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
@@ -139,7 +156,7 @@ def create_feature_files(input_data, loaded_embeddings):
 
 
 if __name__ == '__main__':
-    input_data = "cleaned_data/clean_raw_train_data.tsv"
+    input_data = "cleaned_data/clean_raw_mini_train_data.tsv"
     path_to_emb = 'wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
