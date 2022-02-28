@@ -21,7 +21,7 @@ def extract_svo(doc):
     ve = []
     for token in doc:
         # is this a verb?
-        if token.pos_ == "VERB":
+        if token.pos_ == "VERB" or token.pos_ == "AUX":
             ve.append(token.text)
         # is this the object?
         if token.dep_ in OBJECT_DEPS or token.head.dep_ in OBJECT_DEPS:
@@ -47,7 +47,7 @@ def is_question(doc):
 
 def initialise_spacy():
     ''' Will initialise the Spacy NLP object '''
-    nlp = spacy.blank('en')
+    nlp = spacy.load('en_core_web_sm')
     return nlp
 
 
@@ -56,6 +56,7 @@ def get_sentence_predicates_and_arguments(input_path: str):
     predicate_list = []
     arguments_list = []
     tokens = []
+    token_dict = {}
 
     df = pd.read_csv(input_path, sep='\t', quotechar='|', header=None)
     df_temp = df.iloc[:, [0, 2]]
@@ -65,13 +66,19 @@ def get_sentence_predicates_and_arguments(input_path: str):
     nlp = initialise_spacy()
     sentences = list(df_temp['tokens'])
 
-    for i in range(len(sentences)):
-        sentence = sentences[i]
-        # sentence = [x for x in sentence if x]
-        doc = Doc(nlp.vocab, words=sentence)
+    # for i in range(len(sentences)):
+    #     sentence = sentences[i]
+    #     # sentence = [x for x in sentence if x]
+    #     doc = Doc(nlp.vocab, words=sentence)
+    for sentence in sentences: # Initializing tokenizer dict
+        full_text = ' '.join(sentence)
+        token_dict[full_text] = sentence
+
+    for sentence in sentences: # Need to do this twice since now the tokenizer dict is initialized
+        doc = nlp(' '.join(sentence))
 
         subject, verb, attribute = extract_svo(doc)
-        subject_list.append([subject])
+        subject_list.append([subject])    
         predicate_list.append([verb])
         arguments_list.append([attribute])
         tokens.append(sentence)
@@ -88,12 +95,15 @@ def create_tokens_predicate_dataframe(data):
     predicate_argument_list = []
     for j in range(len(data)):
         for k in range(len(data['tokens'][j])):
+            subjects = data['subject'][j][0]
             predicate = data['predicate'][j][0]
             arguments = data['arguments'][j][0]
             token = data['tokens'][j][k]
             if token in predicate:
                 predicate_argument_list.append({"number": j+1, "token": token, "if_predicate": 1, "if_argument": 0})
             elif token in arguments:
+                predicate_argument_list.append({"number": j+1, "token": token, "if_predicate": 0, "if_argument": 1})
+            elif token in subjects:
                 predicate_argument_list.append({"number": j+1, "token": token, "if_predicate": 0, "if_argument": 1})
             else:
                 predicate_argument_list.append({"number": j+1, "token": token, "if_predicate": 0, "if_argument": 0})
