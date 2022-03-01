@@ -1,4 +1,4 @@
-from multiprocessing.sharedctypes import Value
+
 import pandas as pd
 import csv
 from gensim.models import Word2Vec, KeyedVectors
@@ -106,7 +106,7 @@ def extract_features(input_data):
     lemmas = []
         
     df = pd.read_csv(input_data, sep='\t', quotechar='|', header=None)
-    df_temp = df.iloc[:, [0, 2]]
+    df_temp = df.iloc[:, [3, 5]]
     df_temp.columns = ['sentence_no', 'tokens']
     df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
 
@@ -156,7 +156,7 @@ def create_feature_files(input_data, loaded_embeddings):
 
 
 if __name__ == '__main__':
-    input_data = "cleaned_data/clean_raw_mini_train_data.tsv"
+    input_data = "cleaned_data/clean_train_arguments.tsv"
     path_to_emb = 'wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
