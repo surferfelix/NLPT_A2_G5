@@ -1,9 +1,11 @@
 
+import nltk
 import pandas as pd
 import csv
 from gensim.models import Word2Vec, KeyedVectors
 import spacy
 from spacy.tokens import Doc
+import benepar
 
 
 def preprocessing_raw_data(raw): # No longer using this function; done by Alicja now
@@ -93,15 +95,11 @@ def extract_constituencies(input):
     '''Will retrieve constituents for each text part in list
     :param input: takes a spacy doc object as 
     return: returns a container with the constituents after parsing'''
-    #inspired by [https://github.com/nikitakit/self-attentive-parser][16-02-2022]
-    for i in input:
-        print(i)
-    # nlp = initialise_spacy()
-    # container = []
-    # doc = nlp(input[0])
-    # for sent in list(doc.sents):
-    #     container.append(sent._.parse_string)
-    # return container
+    
+    parser = benepar.Parser("benepar_en3")
+    input_sentence = benepar.InputSentence(words = input.split())
+    tree = parser.parse(input)
+    return tree
 
 def extract_features(input_data):
     '''Extracts the tokens, lemmas, and heads from the data
@@ -124,7 +122,6 @@ def extract_features(input_data):
     df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
 
     nlp = initialise_spacy()
-
     nlp.tokenizer = custom_tokenizer
     sentences = list(df_temp['tokens'])
     
@@ -135,13 +132,13 @@ def extract_features(input_data):
     for sentence in sentences: # Need to do this twice since now the tokenizer dict is initialized
         doc = nlp(' '.join(sentence))
         tokens_in_sentence = get_tokens(doc)
-        extract_constituencies(doc)
-    #     for token in doc:
-    #         tokens.append(token)
-    #         heads.append(token.head.text)
-    #         lemmas.append(token.lemma_)
+        extract_constituencies(doc.text)
+        for token in doc:
+            tokens.append(token)
+            heads.append(token.head.text)
+            lemmas.append(token.lemma_)
 
-    # return tokens, lemmas, heads
+    return tokens, lemmas, heads
 
 
 def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
@@ -151,10 +148,9 @@ def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
     :param heads: the heads of the sentences, also output of extract_features function
     :embedding_model: a loaded w2v embedding_model
     '''
-    # tokens = [token.text for token in tokens]  # Need to conv for embedding loading
-    # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
-    # df = pd.DataFrame([*zip(tokens, lemmas, heads, embeddings)])
-    print(tokens, lemmas, heads)
+    tokens = [token.text for token in tokens]  # Need to conv for embedding loading
+    embeddings = get_embedding_representation_of_token(tokens, embedding_model)
+    df = pd.DataFrame([*zip(tokens, lemmas, heads, embeddings)])
     df = pd.DataFrame(*[zip(tokens, lemmas, heads)])
     old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = None)
     big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
@@ -163,8 +159,8 @@ def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
 
 def create_feature_files(input_data, loaded_embeddings):
     embedding_model = loaded_embeddings
-    extract_features(input_data) # tokens, lemmas, heads = 
-    # write_feature_out(tokens, lemmas, heads, embedding_model, input_data)
+    tokens, lemmas, heads =  extract_features(input_data)
+    write_feature_out(tokens, lemmas, heads, embedding_model, input_data)
 
 
 if __name__ == '__main__':
