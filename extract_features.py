@@ -6,7 +6,7 @@ import spacy
 from spacy.tokens import Doc
 
 
-def preprocessing_raw_data(raw):
+def preprocessing_raw_data(raw): # No longer using this function; done by Alicja now
     '''Exports preprocessed raw data file'''
     container = []  # List of lists
     with open(raw) as raw_file:
@@ -89,6 +89,19 @@ def get_embedding_representation_of_token(tokens: list, embeddingmodel='', dimen
         vector_reps.append(vector)
     return vector_reps
 
+def extract_constituencies(input):
+    '''Will retrieve constituents for each text part in list
+    :param input: takes a spacy doc object as 
+    return: returns a container with the constituents after parsing'''
+    #inspired by [https://github.com/nikitakit/self-attentive-parser][16-02-2022]
+    for i in input:
+        print(i)
+    # nlp = initialise_spacy()
+    # container = []
+    # doc = nlp(input[0])
+    # for sent in list(doc.sents):
+    #     container.append(sent._.parse_string)
+    # return container
 
 def extract_features(input_data):
     '''Extracts the tokens, lemmas, and heads from the data
@@ -106,7 +119,7 @@ def extract_features(input_data):
     lemmas = []
         
     df = pd.read_csv(input_data, sep='\t', quotechar='|', header=None)
-    df_temp = df.iloc[:, [3, 5]]
+    df_temp = df.iloc[:, [12, 2]]
     df_temp.columns = ['sentence_no', 'tokens']
     df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
 
@@ -122,14 +135,13 @@ def extract_features(input_data):
     for sentence in sentences: # Need to do this twice since now the tokenizer dict is initialized
         doc = nlp(' '.join(sentence))
         tokens_in_sentence = get_tokens(doc)
-        for token in doc:
-            tokens.append(token)
-            heads.append(token.head.text)
-            lemmas.append(token.lemma_)
+        extract_constituencies(doc)
+    #     for token in doc:
+    #         tokens.append(token)
+    #         heads.append(token.head.text)
+    #         lemmas.append(token.lemma_)
 
-    # heads = [tok.head.text for tok in tokens]
-    # lemmas = [tok.lemma_ for tok in tokens]
-    return tokens, lemmas, heads
+    # return tokens, lemmas, heads
 
 
 def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
@@ -151,12 +163,12 @@ def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
 
 def create_feature_files(input_data, loaded_embeddings):
     embedding_model = loaded_embeddings
-    tokens, lemmas, heads = extract_features(input_data)
-    write_feature_out(tokens, lemmas, heads, embedding_model, input_data)
+    extract_features(input_data) # tokens, lemmas, heads = 
+    # write_feature_out(tokens, lemmas, heads, embedding_model, input_data)
 
 
 if __name__ == '__main__':
-    input_data = "cleaned_data/clean_train_arguments.tsv"
+    input_data = "cleaned_data/final_train.tsv"
     path_to_emb = 'wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
