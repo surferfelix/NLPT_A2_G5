@@ -1,4 +1,3 @@
-
 import nltk
 import pandas as pd
 import csv
@@ -6,6 +5,7 @@ from gensim.models import Word2Vec, KeyedVectors
 import spacy
 from spacy.tokens import Doc
 import benepar
+import stanza
 
 
 def preprocessing_raw_data(raw): # No longer using this function; done by Alicja now
@@ -60,6 +60,9 @@ def initialise_spacy():
     nlp = spacy.load('en_core_web_sm')
     return nlp
 
+def initialize_stanza(): # In this project we use Stanza for constituency extraction
+    nlp = stanza.Pipeline(lang='en', processors='tokenize, pos, constituency', tokenize_pretokenized = True)
+    return nlp
 
 def get_tokens(doc):
     return [token for token in doc]
@@ -91,15 +94,16 @@ def get_embedding_representation_of_token(tokens: list, embeddingmodel='', dimen
         vector_reps.append(vector)
     return vector_reps
 
-def extract_constituencies(input):
-    '''Will retrieve constituents for each text part in list
-    :param input: takes a spacy doc object as 
-    return: returns a container with the constituents after parsing'''
+# def extract_constituencies(input):
+#     '''Will retrieve constituents for each text part in list
+#     :param input: takes a spacy doc object as 
+#     return: returns a container with the constituents after parsing'''
     
-    parser = benepar.Parser("benepar_en3")
-    input_sentence = benepar.InputSentence(words = input.split())
-    tree = parser.parse(input)
-    return tree
+#     # nlp = initialise_spacy()
+#     parser = benepar.Parser('benepar_en3')
+#     input_sentence = benepar.InputSentence(words = input.split())
+#     tree = parser.parse(input_sentence)
+#     return tree
 
 def extract_features(input_data):
     '''Extracts the tokens, lemmas, and heads from the data
@@ -124,22 +128,54 @@ def extract_features(input_data):
     nlp = initialise_spacy()
     nlp.tokenizer = custom_tokenizer
     sentences = list(df_temp['tokens'])
-    
+    complete_stanza_input = []
     for sentence in sentences: # Initializing tokenizer dict
         full_text = ' '.join(sentence)
         token_dict[full_text] = sentence
-
     for sentence in sentences: # Need to do this twice since now the tokenizer dict is initialized
+        complete_stanza_input.append(sentence)
         doc = nlp(' '.join(sentence))
         tokens_in_sentence = get_tokens(doc)
-        extract_constituencies(doc.text)
         for token in doc:
             tokens.append(token)
             heads.append(token.head.text)
             lemmas.append(token.lemma_)
+    return tokens, lemmas, heads, complete_stanza_input
 
-    return tokens, lemmas, heads
+def get_stanza_constituents(complete_stanza_input):
+    path_labels = []
+    nlp2 = initialize_stanza()
+    doc_stanza = nlp2(complete_stanza_input)
+    doc_sentences = list(doc_stanza.sentences)
 
+    # for each sentence in the text, get the tree paths for the tokens in the sentence
+    for i in range(len(doc_sentences)):
+        get_stanza_paths([], doc_sentences[i].constituency.children[0], path_labels)
+
+    print(path_labels, len(path_labels))
+    return path_labels
+
+
+def get_stanza_paths(path_list, node, overarching_list):
+    """
+    Function that creates a constituency tree path for each word in text.
+    """
+    # check whether there is a syntax tree
+    if path_list is None:
+        return
+    # if so, append current label
+    path_list.append(node.label)
+    # once you get to leaf, append path of the leaf
+    if len(node.children) == 0:
+        # exclude the leaf/word itself and add to overarching list
+        overarching_list.append(path_list)
+        # stop function
+        return
+    for n in node.children:
+        # all children need to have same subpath, which is why .copy() is needed
+        # keep getting paths until leaf is reached
+        get_stanza_paths(path_list.copy(), n, overarching_list)
+    
 
 def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
     '''Takes the features as input and writes a tsv file
@@ -159,12 +195,13 @@ def write_feature_out(tokens, lemmas, heads, embedding_model, input_path):
 
 def create_feature_files(input_data, loaded_embeddings):
     embedding_model = loaded_embeddings
-    tokens, lemmas, heads =  extract_features(input_data)
-    write_feature_out(tokens, lemmas, heads, embedding_model, input_data)
+    tokens, lemmas, heads, complete_stanza_input = extract_features(input_data)
+    constituencies = get_stanza_constituents(complete_stanza_input)
+    # write_feature_out(tokens, lemmas, heads, embedding_model, input_data)
 
 
 if __name__ == '__main__':
-    input_data = "cleaned_data/final_train.tsv"
+    input_data = "cleaned_data/mini_final_train.tsv"
     path_to_emb = 'wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)

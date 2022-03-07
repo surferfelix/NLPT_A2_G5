@@ -1,0 +1,12 @@
+# Requirements
+pip install pandas
+pip install spacy
+pip install sklearn
+pip install gensim
+python -m spacy download en_core_web_sm
+pip install stanza
+python
+import stanza
+stanza.download('en')
+exit()
+
