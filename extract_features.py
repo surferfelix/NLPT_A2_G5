@@ -146,7 +146,13 @@ def extract_features(input_data):
             tokens.append(token)
             heads.append(token.head.text)
             lemmas.append(token.lemma_)
-    return tokens, lemmas, heads, complete_stanza_input
+            ne = token.ent_type_
+            if ne == "":
+                ne = "NONE"
+            named_entities.append(ne)
+
+    return tokens, lemmas, heads, named_entities, complete_stanza_input
+
 
 
 def get_stanza_constituents(complete_stanza_input):
@@ -162,7 +168,7 @@ def get_stanza_constituents(complete_stanza_input):
     print(path_labels, len(path_labels))
     return path_labels
 
-
+# Function taken from previous assignment and adjusted: https://github.com/efemeryds/NLP-technology-assignment-1/blob/main/code/extract_token_features.py
 def get_stanza_paths(path_list, node, overarching_list):
     """
     Function that creates a constituency tree path for each word in text.
@@ -184,7 +190,7 @@ def get_stanza_paths(path_list, node, overarching_list):
         get_stanza_paths(path_list.copy(), n, overarching_list)
 
 
-def write_feature_out(tokens: list, lemmas: list, heads: list, constituencies: list, embedding_model, input_path: str):
+def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities:list, constituencies: list, embedding_model, input_path: str):
     '''Takes the features as input and writes a tsv file
     :param tokens: output of extract_features function
     :param lemmas: the lemmatized tokens, also output of extract_features function
@@ -195,7 +201,8 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, constituencies: l
     tokens = [token.text for token in tokens]  # Need to conv for embedding loading
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
     # df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies, embeddings)])
-    df = pd.DataFrame(*[zip(tokens, lemmas, heads, constituencies)])
+    df = pd.DataFrame(*[zip(tokens, lemmas, heads, named_entities, constituencies)])
+
     old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header=None)
     big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
     big_df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|', header=None, index=False)
@@ -203,9 +210,10 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, constituencies: l
 
 def create_feature_files(input_data, loaded_embeddings=''):
     embedding_model = loaded_embeddings
-    tokens, lemmas, heads, complete_stanza_input = extract_features(input_data)
+    tokens, lemmas, heads, named_entities, complete_stanza_input = extract_features(input_data)
     constituencies = get_stanza_constituents(complete_stanza_input)
-    write_feature_out(tokens, lemmas, heads, constituencies, embedding_model, input_data)
+    write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data)
+
 
 
 if __name__ == '__main__':
