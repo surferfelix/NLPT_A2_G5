@@ -1,12 +1,12 @@
-# Requirements
-pip install pandas
-pip install spacy
-pip install sklearn
-pip install gensim
-python -m spacy download en_core_web_sm
-pip install stanza
-python
-import stanza
-stanza.download('en')
-exit()
-
+allennlp==2.9.0
+allennlp_models==2.9.0
+benepar==0.2.0
+gensim==4.1.2
+nltk==3.7
+numpy==1.22.2
+pandas==1.4.1
+scikit_learn==1.0.2
+spacy==3.2.2
+stanza==1.3.0
+torch==1.10.2
+transformers==4.17.0
