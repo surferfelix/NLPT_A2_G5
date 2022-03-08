@@ -8,7 +8,7 @@ import benepar
 import stanza
 
 
-def preprocessing_raw_data(raw): # No longer using this function; done by Alicja now
+def preprocessing_raw_data(raw):  # No longer using this function; done by Alicja now
     '''Exports preprocessed raw data file'''
     container = []  # List of lists
     with open(raw) as raw_file:
@@ -60,9 +60,11 @@ def initialise_spacy():
     nlp = spacy.load('en_core_web_sm')
     return nlp
 
-def initialize_stanza(): # In this project we use Stanza for constituency extraction
-    nlp = stanza.Pipeline(lang='en', processors='tokenize, pos, constituency', tokenize_pretokenized = True)
+
+def initialize_stanza():  # In this project we use Stanza for constituency extraction
+    nlp = stanza.Pipeline(lang='en', processors='tokenize, pos, constituency', tokenize_pretokenized=True)
     return nlp
+
 
 def get_tokens(doc):
     return [token for token in doc]
@@ -94,11 +96,12 @@ def get_embedding_representation_of_token(tokens: list, embeddingmodel='', dimen
         vector_reps.append(vector)
     return vector_reps
 
+
 # def extract_constituencies(input):
 #     '''Will retrieve constituents for each text part in list
 #     :param input: takes a spacy doc object as 
 #     return: returns a container with the constituents after parsing'''
-    
+
 #     # nlp = initialise_spacy()
 #     parser = benepar.Parser('benepar_en3')
 #     input_sentence = benepar.InputSentence(words = input.split())
@@ -109,17 +112,19 @@ def extract_features(input_data):
     '''Extracts the tokens, lemmas, and heads from the data
     :type input_data: a pd.DataFrame object
     '''
-    def custom_tokenizer(text): # https://stackoverflow.com/questions/53594690/is-it-possible-to-use-spacy-with-already-tokenized-input
+
+    def custom_tokenizer(
+            text):  # https://stackoverflow.com/questions/53594690/is-it-possible-to-use-spacy-with-already-tokenized-input
         if text in token_dict:
             return Doc(nlp.vocab, token_dict[text])
         else:
             raise ValueError('No tokenization available for input')
-    
+
     token_dict = {}
     tokens = []
     heads = []
     lemmas = []
-        
+
     df = pd.read_csv(input_data, sep='\t', quotechar='|', header=None)
     df_temp = df.iloc[:, [12, 2]]
     df_temp.columns = ['sentence_no', 'tokens']
@@ -129,10 +134,10 @@ def extract_features(input_data):
     nlp.tokenizer = custom_tokenizer
     sentences = list(df_temp['tokens'])
     complete_stanza_input = []
-    for sentence in sentences: # Initializing tokenizer dict
+    for sentence in sentences:  # Initializing tokenizer dict
         full_text = ' '.join(sentence)
         token_dict[full_text] = sentence
-    for sentence in sentences: # Need to do this twice since now the tokenizer dict is initialized
+    for sentence in sentences:  # Need to do this twice since now the tokenizer dict is initialized
         complete_stanza_input.append(sentence)
         doc = nlp(' '.join(sentence))
         tokens_in_sentence = get_tokens(doc)
@@ -141,6 +146,7 @@ def extract_features(input_data):
             heads.append(token.head.text)
             lemmas.append(token.lemma_)
     return tokens, lemmas, heads, complete_stanza_input
+
 
 def get_stanza_constituents(complete_stanza_input):
     path_labels = []
@@ -175,7 +181,7 @@ def get_stanza_paths(path_list, node, overarching_list):
         # all children need to have same subpath, which is why .copy() is needed
         # keep getting paths until leaf is reached
         get_stanza_paths(path_list.copy(), n, overarching_list)
-    
+
 
 def write_feature_out(tokens: list, lemmas: list, heads: list, constituencies: list, embedding_model, input_path: str):
     '''Takes the features as input and writes a tsv file
@@ -189,12 +195,12 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, constituencies: l
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
     # df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies, embeddings)])
     df = pd.DataFrame(*[zip(tokens, lemmas, heads, constituencies)])
-    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = None)
+    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header=None)
     big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
-    big_df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|', header = None)
+    big_df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|', header=None, index=False)
 
 
-def create_feature_files(input_data, loaded_embeddings):
+def create_feature_files(input_data, loaded_embeddings=''):
     embedding_model = loaded_embeddings
     tokens, lemmas, heads, complete_stanza_input = extract_features(input_data)
     constituencies = get_stanza_constituents(complete_stanza_input)

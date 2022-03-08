@@ -57,7 +57,7 @@ def get_sentence_predicates_and_arguments(input_path: str):
     arguments_list = []
     tokens = []
 
-    df = pd.read_csv(input_path, sep='\t', quotechar='|', header=None)
+    df = pd.read_csv(input_path, sep='\t', quotechar='|')
     df_temp = df.iloc[:, [0, 2]]
     df_temp.columns = ['sentence_no', 'tokens']
     df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
@@ -81,10 +81,10 @@ def get_sentence_predicates_and_arguments(input_path: str):
     data['subject'] = subject_list
     data['predicate'] = predicate_list
     data['arguments'] = arguments_list
-    return data
+    return data, df
 
 
-def create_tokens_predicate_dataframe(data):
+def create_tokens_predicate_dataframe(data, input_data):
     predicate_argument_list = []
     for j in range(len(data)):
         for k in range(len(data['tokens'][j])):
@@ -98,16 +98,27 @@ def create_tokens_predicate_dataframe(data):
             else:
                 predicate_argument_list.append({"number": j+1, "token": token, "if_predicate": 0, "if_argument": 0})
 
-    predicate_df = pd.DataFrame(predicate_argument_list)
-    return predicate_df
+    final_df = pd.DataFrame(predicate_argument_list)
+    final_df['gold_predicate_binary'] = list(input_data['gold_predicate_binary'])
+    final_df['gold_arguments_binary'] = list(input_data['gold_arguments_binary'])
+
+    predicate_final_data = final_df[['if_predicate', 'gold_predicate_binary']]
+    argument_final_data = final_df[['if_argument', 'gold_arguments_binary']]
+
+    predicate_final_data.columns = ['predict', 'gold']
+    argument_final_data.columns = ['predict', 'gold']
+
+    predicate_final_data.to_csv("output/rule_arg_identification.csv", sep='\t', quotechar='|', index=False)
+    argument_final_data.to_csv("output/rule_pred_identification.csv", sep='\t', quotechar='|', index=False)
+
+    return predicate_final_data, argument_final_data
 
 
 # gather the user input and gather the info
 
 if __name__ == "__main__":
-    input_data = "cleaned_data/clean_raw_train_data.tsv"
-    final_data = get_sentence_predicates_and_arguments(input_data)
+    input_data = "cleaned_data/final_test.tsv"
+    final_data, data = get_sentence_predicates_and_arguments(input_data)
+    predicate_final, argument_final = create_tokens_predicate_dataframe(final_data, data)
 
-    predicate_argument_df = create_tokens_predicate_dataframe(final_data)
-    predicate_argument_df.to_csv("processed_data/pred_arg_labels_0.csv")
 
