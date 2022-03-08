@@ -115,6 +115,7 @@ def extract_features(input_data):
     tokens = []
     heads = []
     lemmas = []
+    named_entities = []
         
     df = pd.read_csv(input_data, sep='\t', quotechar='|', header=None)
     df_temp = df.iloc[:, [12, 2]]
@@ -164,7 +165,7 @@ def create_feature_files(input_data, loaded_embeddings):
 
 
 if __name__ == '__main__':
-    input_data = "cleaned_data/final_train.tsv"
+    input_data = "cleaned_data/mini_final_train.tsv"
     path_to_emb = 'wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
