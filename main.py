@@ -3,30 +3,62 @@ training, testing) using command line arguments for potential parameters
 (e.g. filepaths) + all of your other scripts. """
 import pandas as pd
 from extract_features import create_feature_files
+import sys
 
-""" 1) Feature extraction """
+
+if_rule_based = sys.argv[0]
+
+
+
+""" Feature extraction """
 
 # saves feature to the 'processed_data/feature_file.tsv'
-# one needs to have proper word embeddings model downloaded to make it work
-create_feature_files()
+input_data = "cleaned_data/final_train.tsv"
+create_feature_files(input_data)
 
-""" 2) Get predicate labels with simple rules """
-
-
-""" 3) Get predicate labels with SVM """
+""" Get predicate labels with simple rules """
 
 
-""" 4) Get arguments labels with SVM """
+""" Evaluate the results """
 
 
-""" 5) Evaluate the results """
 
-""" a) rule-based predicates """
-
-
-""" b) svm-based predicates """
+""" Get arguments labels with simple rules """
 
 
-""" c) svm-based arguments """
+""" Evaluate the results """
+
+
+
+""" Get predicate labels with SVM """
+
+
+""" Evaluate the results """
+
+
+
+""" Get arguments labels with SVM """
+
+
+""" Evaluate the results """
+
+
+
+
+
+""" Get arguments labels with SVM """
+
+
+
+
+""" Evaluate the results """
+
+
+
+
+
+
+
+
 
 
