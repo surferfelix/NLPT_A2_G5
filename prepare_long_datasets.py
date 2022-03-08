@@ -69,6 +69,6 @@ def extended_dataset_seperate_predicates(data_path: str, output_path: str):
 if __name__ == "__main__":
     extended_dataset_seperate_predicates("cleaned_data/clean_raw_train_data.tsv",
                                         "cleaned_data/final_train.tsv")
-    #extended_dataset_seperate_predicates("cleaned_data/clean_raw_test_data.tsv",
-    #                                     "cleaned_data/final_test.tsv")
+    extended_dataset_seperate_predicates("cleaned_data/clean_raw_test_data.tsv",
+                                         "cleaned_data/final_test.tsv")
 

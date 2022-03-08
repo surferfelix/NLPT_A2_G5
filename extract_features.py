@@ -154,6 +154,7 @@ def extract_features(input_data):
     return tokens, lemmas, heads, named_entities, complete_stanza_input
 
 
+
 def get_stanza_constituents(complete_stanza_input):
     path_labels = []
     nlp2 = initialize_stanza()
@@ -201,6 +202,7 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities:li
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
     # df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies, embeddings)])
     df = pd.DataFrame(*[zip(tokens, lemmas, heads, named_entities, constituencies)])
+
     old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header=None)
     big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
     big_df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|', header=None, index=False)
@@ -211,6 +213,7 @@ def create_feature_files(input_data, loaded_embeddings=''):
     tokens, lemmas, heads, named_entities, complete_stanza_input = extract_features(input_data)
     constituencies = get_stanza_constituents(complete_stanza_input)
     write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data)
+
 
 
 if __name__ == '__main__':

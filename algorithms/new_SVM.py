@@ -54,10 +54,11 @@ def get_predicted_and_gold_labels(test_path, vectorizer, classifier, selected_fe
 
     return predictions, gold_labels
 
-def run_classifier_and_return_predictions_and_gold(train_path, test_path, selected_features, label):
+def run_classifier_and_return_predictions_and_gold(train_path, test_path, selected_features, label, name):
     """Run classifier and get predictions using default parameters or cross validation."""
 
-    train_features, train_labels = extract_features_and_labels(train_path, selected_features, label)
+    train_features, train_labels = extract_features_and_labels(train_path, selected_features,  
+                                                               label)
 
    
     classifier, vectorizer = create_classifier(train_features, train_labels)
@@ -65,94 +66,35 @@ def run_classifier_and_return_predictions_and_gold(train_path, test_path, select
     predictions, gold_labels = get_predicted_and_gold_labels(test_path, vectorizer, classifier, 
                                                              selected_features, label)
 
-    return predictions, gold_labels
-
-def generate_confusion_matrix(predictions, gold_labels):
-    """Generate a confusion matrix."""
-
-    labels = sorted(set(gold_labels))
-    cf_matrix = confusion_matrix(gold_labels, predictions, labels=labels)
-    # transform confusion matrix into a dataframe
-    df_cf_matrix = pd.DataFrame(cf_matrix, index=labels, columns=labels)
-
-    return df_cf_matrix
-
-
-def calculate_precision_recall_f1_score(predictions, gold_labels, digits=3):
-    """Calculate evaluation metrics."""
-
-    # get the report in dictionary form
-    report = classification_report(gold_labels, predictions, zero_division=0, output_dict=True)
-    # remove unwanted metrics
-    report.pop('accuracy')
-    report.pop('weighted avg')
-    # transform dictionary into a dataframe and round the results
-    df_report = pd.DataFrame(report).transpose()
-    df_report = df_report.round(digits)
-    df_report['support'] = df_report['support'].astype(int)
-
-    return df_report 
-
-def evaluate_classifier(predictions, gold_labels, selected_features, name):
-    """Produce full evaluation of classifier."""
-
-    print(f"Evaluating {name.replace('_', ' ')} with {', '.join(selected_features)} as features:")
-
-    cf_matrix = generate_confusion_matrix(predictions, gold_labels)
-    report = calculate_precision_recall_f1_score(predictions, gold_labels)
-
-    print(cf_matrix)
-    # print(cf_matrix.to_latex())  # print and paste to Overleaf
-
-    print(report)
-    # print(report.to_latex())  # print and paste to Overleaf
-
-def run_and_evaluate_a_system(train_path, test_path, selected_features, name, label):
-    """Run full classification and evaluation of a system."""
-
-    predictions, gold_labels = run_classifier_and_return_predictions_and_gold(train_path, test_path, 
-                                                                              selected_features, label)
-         
     
-    print(f"Running {name.replace('_', ' ')}")
+    list_dict = {'predict':predictions, 'gold':gold_labels} 
+    df = pd.DataFrame(list_dict) 
+    df.to_csv("../output/"+name+'.csv', index=False) 
 
-    
-    evaluate_classifier(predictions, gold_labels, selected_features, name)
 
-################################################################
-# change the paths for different tasks 
+def main(paths=None) -> None:
+    """Preprocess input file and save a preprocessed version of it."""
+    if not paths:  # if no paths are passed to the function
+        paths = sys.argv[1:]
 
-paths = ['../cleaned_data/clean_train_arguments.tsv',
-                '../cleaned_data/clean_test_arguments.tsv']
+    if not paths:  # if no paths are passed to the function through the command line
+        
+        paths = ['../cleaned_data/final_train.tsv',
+                        '../cleaned_data/final_test.tsv']
 
-# change the features for different tasks 
+    # change the features for different tasks 
 
-selected_features = [ '2', '3', '4','5', '6', '7', '8', '9', 'sentence_no']
-
-def svm_for_argument_classification(paths, selected_features, label = 'arguments'):       
+    selected_features = [ '2', '3', '4','5', '6', '7', '8', '9', 'sentence_no']
 
     train_path = paths[0]
     test_path = paths[1]
 
-    name = "argument_classification_SVM"
-    label = "arguments"
-    run_and_evaluate_a_system(train_path, test_path, selected_features, name, label)
+    labels_name = {"arguments":"arg_classification", "gold_predicate_binary":"pred_identification", 
+               "gold_arguments_binary":"arg_identification"}
     
-def svm_for_predicate_identification(paths, selected_features, label = 'predicate'):       
- 
+    for label, name in labels_name.items():
+        run_classifier_and_return_predictions_and_gold(train_path, test_path, selected_features, 
+                                                       label, name)   
 
-    train_path = paths[0]
-    test_path = paths[1]
-
-    name = "predicate_identification_SVM"
-    run_and_evaluate_a_system(train_path, test_path, selected_features, name, label)
-    
-def svm_for_argument_identification(paths, selected_features, label = 'arguments'):       
-
-    train_path = paths[0]
-    test_path = paths[1]
-
-    name = "argument_identification_SVM"
-    run_and_evaluate_a_system(train_path, test_path, selected_features, name, label)
-
-# svm_for_argument_classification(paths, selected_features, label = 'arguments')
+if __name__ == '__main__':
+    main()
