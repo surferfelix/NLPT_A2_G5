@@ -1,0 +1,1 @@
+""" Create data with each predicate """
