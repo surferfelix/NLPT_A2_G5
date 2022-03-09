@@ -2,12 +2,9 @@ import csv
 import sys
 import os
 import pandas as pd
-from tabulate import tabulate
 from sklearn.svm import LinearSVC
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.metrics import classification_report, confusion_matrix
-
-
 
 def extract_features_and_labels(file_path, selected_features, label):
     """Extract a set of features and gold labels from file."""
@@ -21,7 +18,7 @@ def extract_features_and_labels(file_path, selected_features, label):
         for row in reader:
             feature_dict = {}
             for feature_name in selected_features:
-                if row[feature_name]:  # if there is a value for this feature
+                if row[feature_name]:  # if this feature exists
                     feature_dict[feature_name] = row[feature_name]
             features.append(feature_dict)
             labels.append(row[label])
@@ -57,10 +54,8 @@ def get_predicted_and_gold_labels(test_path, vectorizer, classifier, selected_fe
 def run_classifier_and_return_predictions_and_gold(train_path, test_path, selected_features, label, name):
     """Run classifier and get predictions using default parameters or cross validation."""
 
-    train_features, train_labels = extract_features_and_labels(train_path, selected_features,  
-                                                               label)
+    train_features, train_labels = extract_features_and_labels(train_path, selected_features, label) # train_features, train_labels = 
 
-   
     classifier, vectorizer = create_classifier(train_features, train_labels)
 
     predictions, gold_labels = get_predicted_and_gold_labels(test_path, vectorizer, classifier, 
@@ -79,20 +74,21 @@ def main(paths=None) -> None:
 
     if not paths:  # if no paths are passed to the function through the command line
         
-        paths = ['../cleaned_data/final_train.tsv',
-                        '../cleaned_data/final_test.tsv']
+        paths = ['../processed_data/mini_final_train_with_feature.tsv', # FeatureFile
+                        '../processed_data/mini_final_te_with_feature.tsv']  # Automatic Evaluation
 
     # change the features for different tasks 
-
-    selected_features = [ '2', '3', '4','5', '6', '7', '8', '9', 'sentence_no']
-
+    # 0 = token, 1 = spacy_lemma, 2 = head, 3= path, 4 = '?', 5 = '?', 6 = POS, 7 = type 8 = ?, 
+    # 15 = GOLD PRED, # 16 = GOLD ARG
+    selected_features = [ '0','2','4', '6', '7', '8']
     train_path = paths[0]
     test_path = paths[1]
 
-    labels_name = {"arguments":"arg_classification", "gold_predicate_binary":"pred_identification", 
-               "gold_arguments_binary":"arg_identification"}
+    labels_name = {"15":"pred_identification", 
+               "16":"arg_identification"}
     
     for label, name in labels_name.items():
+        print(f'running {name}')
         run_classifier_and_return_predictions_and_gold(train_path, test_path, selected_features, 
                                                        label, name)   
 
