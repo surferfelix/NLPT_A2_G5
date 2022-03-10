@@ -228,7 +228,7 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
                        'Prev_pos': prev_pos, 'Next_pos': next_pos})
     big_df = df.merge(old_df, how='inner', left_index=True, right_index=True)
     write_path = input_path.split('/')[-1].rstrip('.tsv') + '_with_feature' + '.tsv'
-    big_df.to_csv(f"feature_data/{write_path}", sep='\t', quotechar='|', index=False)
+    big_df.to_csv(f"../feature_data/{write_path}", sep='\t', quotechar='|', index=False)
 
 
 def create_feature_files(input_data, loaded_embeddings=''):
@@ -249,9 +249,7 @@ def create_feature_files(input_data, loaded_embeddings=''):
 
 if __name__ == '__main__':
 
-    # data_paths = ["cleaned_data/mini_final_train.tsv", "cleaned_data/mini_final_test.tsv"]
-    # data_paths = ["cleaned_data/mini_final_train.tsv"]
-    data_paths = ["cleaned_data/mini_final_test.tsv"]
+    data_paths = ["../cleaned_data/mini_final_train.tsv", "../cleaned_data/mini_final_test.tsv"]
     path_to_emb = '../wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
