@@ -28,7 +28,7 @@ def extract_features_and_labels(file_path, selected_features):
     return features, labels
 
 def create_classifier(train_features, train_labels):
-    """Vectorize features and create classifier from training data."""
+    """Vectorize features and create classifier from training srl_data."""
 
     classifier = LinearSVC(random_state=42)
     vec = DictVectorizer()

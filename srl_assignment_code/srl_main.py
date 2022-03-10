@@ -32,7 +32,7 @@ from tools.srl_predictor import SemanticRoleLabelerPredictor
 
 
 def read_data(reader: DatasetReader, data_paths: Dict) -> Tuple[List[Instance], List[Instance]]:
-    print("Reading data")
+    print("Reading srl_data")
     training_data = list(reader.read(data_paths['train']))
     validation_data = list(reader.read(data_paths['validation']))
     return training_data, validation_data
@@ -165,7 +165,7 @@ if __name__ == '__main__':
 file_type = ['train', 'dev']
 if __name__ == '__main__':
     for file in file_type:
-        path  = "../data/srl_univprop_en."+file+".conll"     
+        path  = "../srl_data/srl_univprop_en."+file+".conll"
         preprocessed_data = preprocessing_raw_data(path, file)
         df = change_value(preprocessed_data, file)
         from_csv_to_json(df, file)
