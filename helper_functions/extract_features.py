@@ -215,15 +215,17 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
     '''
     tokens = [token.text for token in tokens]  # Need to conv for embedding loading
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
-    df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies)])
+    # df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies)])
     df = pd.DataFrame({'tokens': tokens, 'lemmas': lemmas, 'heads': heads, 'named_entities': named_entities,
                        'constituencies': constituencies, 'sentences_for_token': sentences_for_token})
     old_header = ['0', '1','2','3','4','5','6','7','8','9', 'predicate', 'arguments', 'sentence_no', 'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
-    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = 0)
-    big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
+    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = 0, names = old_header)
+    # big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
+    big_df = df.merge(old_df, how='inner', left_index=True, right_index=True)
     write_path = input_path.split('/')[-1].rstrip('.tsv') + '_with_feature' + '.tsv'
-    big_df.to_csv(f"../feature_data/{write_path}", sep='\t', quotechar='|', index=False, header=True)
-
+    print(f"The COLUMNS ARE: {big_df.columns}")
+    big_df.to_csv(f"../feature_data/{write_path}", sep='\t', quotechar='|', index=False)
+ 
 
 def create_feature_files(input_data, loaded_embeddings=''):
     embedding_model = loaded_embeddings
