@@ -64,7 +64,7 @@ def run_classifier_and_return_predictions_and_gold(train_path, test_path, select
     
     list_dict = {'predict':predictions, 'gold':gold_labels} 
     df = pd.DataFrame(list_dict) 
-    df.to_csv("../output/"+name+'.csv', index=False) 
+    df.to_csv("../output/"+name+'.tsv', sep = '\t', index=False) 
 
 
 def main(paths=None) -> None:
@@ -74,18 +74,19 @@ def main(paths=None) -> None:
 
     if not paths:  # if no paths are passed to the function through the command line
         
-        paths = ['../processed_data/mini_final_train_with_feature.tsv', # FeatureFile
-                        '../processed_data/mini_final_test_with_feature.tsv']  # Automatic Evaluation
+        paths = ['../feature_data/final_train_with_feature.tsv', # FeatureFile
+                        '../feature_data/final_te_with_feature.tsv']  # Automatic Evaluation
 
     # change the features for different tasks 
     # 0 = token, 1 = spacy_lemma, 2 = head, 3= path, 4 = '?', 5 = '?', 6 = POS, 7 = type 8 = ?, 
     # 15 = GOLD PRED, # 16 = GOLD ARG
-    selected_features = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'predicate', 'arguments', 'sentence_no', 'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
+    selected_features = ['tokens', 'lemmas', 'heads', 'named_entities', 'sentences_for_token', 'Prev_pos', 'Next_pos',
+    '4', '5', '6', '8', '9']
     train_path = paths[0]
     test_path = paths[1]
 
-    labels_name = {"15":"pred_identification", 
-               "16":"arg_identification"}
+    labels_name = {"arguments": "argument_classification", "gold_predicate_binary":"pred_identification", 
+               "gold_arguments_binary":"arg_identification"}
     
     for label, name in labels_name.items():
         print(f'running {name}')
