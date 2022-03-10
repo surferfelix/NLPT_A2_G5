@@ -97,6 +97,7 @@ def get_embedding_representation_of_token(tokens: list, embeddingmodel='', dimen
         vector_reps.append(vector)
     return vector_reps
 
+
 def extract_features(input_data):
     '''Extracts the tokens, lemmas, and heads from the srl_data
     :type input_data: a pd.DataFrame object
@@ -116,8 +117,8 @@ def extract_features(input_data):
     named_entities = []
     sentence_for_token = []
 
-    df = pd.read_csv(input_data, sep='\t', quotechar='|', header=None)
-    df_temp = df.iloc[:, [12, 2]]
+    df = pd.read_csv(input_data, sep='\t', quotechar='|')
+    df_temp = df.iloc[:, [0, 2]]
     df_temp.columns = ['sentence_no', 'tokens']
     df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
 
@@ -144,16 +145,17 @@ def extract_features(input_data):
 
     return tokens, lemmas, heads, named_entities, complete_stanza_input, sentence_for_token
 
+
 def extract_features_from_file(old_df) -> list:
     '''Extracts old features from file
     :param inputfile: pd Dataframe with old pos tags'''
-    pos_tags= old_df['4'].tolist() # 4 includes the POS tags in the main file
+    pos_tags = old_df['4'].tolist()  # 4 includes the POS tags in the main file
     prevs = []
     nexts = []
     for index, tag in enumerate(pos_tags):
         # Previous POS
         try:
-            prev_pos = pos_tags[index-1]
+            prev_pos = pos_tags[index - 1]
         except IndexError:
             prev_pos = '_'
         prevs.append(prev_pos)
@@ -161,7 +163,7 @@ def extract_features_from_file(old_df) -> list:
         try:
             next_pos = pos_tags[index + 1]
         except IndexError:
-            next_pos= '_'
+            next_pos = '_'
         nexts.append(next_pos)
     return prevs, nexts
 
@@ -212,25 +214,28 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
     tokens = [token.text for token in tokens]  # Need to conv for embedding loading
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
     # df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies)])
-    old_header = ['0', '1','2','3','4','5','6','7','8','9', 'predicate', 'arguments', 'sentence_no', 'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
-    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = 0, names = old_header)
+
+    #old_header = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'predicate', 'arguments', 'sentence_no',
+    #              'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
+    old_df = pd.read_csv(input_path, sep='\t', quotechar='|')
     prev_pos, next_pos = extract_features_from_file(old_df)
-    everything= [tokens, lemmas, heads, prev_pos, next_pos]
+    everything = [tokens, lemmas, heads, prev_pos, next_pos]
     for index, i in enumerate(everything):
         if len(i) != len(tokens):
             print(index, len(i))
     df = pd.DataFrame({'tokens': tokens, 'lemmas': lemmas, 'heads': heads, 'named_entities': named_entities,
-                       'constituencies': constituencies, 'sentences_for_token': sentences_for_token, 'Prev_pos': prev_pos, 'Next_pos': next_pos})
+                       'constituencies': constituencies, 'sentences_for_token': sentences_for_token,
+                       'Prev_pos': prev_pos, 'Next_pos': next_pos})
     big_df = df.merge(old_df, how='inner', left_index=True, right_index=True)
     write_path = input_path.split('/')[-1].rstrip('.tsv') + '_with_feature' + '.tsv'
-    big_df.to_csv(f"../feature_data/{write_path}", sep='\t', quotechar='|', index=False)
- 
+    big_df.to_csv(f"feature_data/{write_path}", sep='\t', quotechar='|', index=False)
+
 
 def create_feature_files(input_data, loaded_embeddings=''):
     embedding_model = loaded_embeddings
     tokens, lemmas, heads, named_entities, complete_stanza_input, sentences_for_token = extract_features(input_data)
     # DUE TO BUG COULD NOT GET WORKING: WAITING FOR RESOLVING STANZA ISSUE OR 'KEY' PARAMETER IMPLEMENTATION
-    constituencies =  ['not_working' for token in tokens] 
+    constituencies = ['not_working' for token in tokens]
     # get_stanza_constituents(complete_stanza_input)
     # for index, (tok, cons) in enumerate(zip(tokens, constituencies)):
     #     if tok.text != cons[-1]:
@@ -238,11 +243,15 @@ def create_feature_files(input_data, loaded_embeddings=''):
     #         print('Stanza tokenization alignment issue, adding _ to attempt srl_data alignment')
     #         constituencies.insert(index, ['_'])
     #         break
-    write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data, sentences_for_token)
+    write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data,
+                      sentences_for_token)
 
 
 if __name__ == '__main__':
-    data_paths = ["../cleaned_data/mini_final_train.tsv", "../cleaned_data/mini_final_test.tsv"]
+
+    # data_paths = ["cleaned_data/mini_final_train.tsv", "cleaned_data/mini_final_test.tsv"]
+    # data_paths = ["cleaned_data/mini_final_train.tsv"]
+    data_paths = ["cleaned_data/mini_final_test.tsv"]
     path_to_emb = '../wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)

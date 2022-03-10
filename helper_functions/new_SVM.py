@@ -75,12 +75,12 @@ def main(paths=None) -> None:
     if not paths:  # if no paths are passed to the function through the command line
         
         paths = ['../processed_data/mini_final_train_with_feature.tsv', # FeatureFile
-                        '../processed_data/mini_final_te_with_feature.tsv']  # Automatic Evaluation
+                        '../processed_data/mini_final_test_with_feature.tsv']  # Automatic Evaluation
 
     # change the features for different tasks 
     # 0 = token, 1 = spacy_lemma, 2 = head, 3= path, 4 = '?', 5 = '?', 6 = POS, 7 = type 8 = ?, 
     # 15 = GOLD PRED, # 16 = GOLD ARG
-    selected_features = [ '0','2','4', '6', '7', '8']
+    selected_features = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'predicate', 'arguments', 'sentence_no', 'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
     train_path = paths[0]
     test_path = paths[1]
 
@@ -96,6 +96,7 @@ def main(paths=None) -> None:
 # to use in the main.py
 # TODO: Add the default selected features when they are in their final version
 def run_model(input_train_path: str, input_test_path: str, input_selected_features: list, input_label: str, input_name: str):
+
     run_classifier_and_return_predictions_and_gold(input_train_path, input_test_path, input_selected_features, 
                                                        input_label, input_name) 
 
