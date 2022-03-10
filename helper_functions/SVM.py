@@ -8,6 +8,7 @@ from tabulate import tabulate
 import pandas as pd
 import os
 
+
 def extract_features_and_labels(file_path, selected_features):
     """Extract a set of features and gold labels from file."""
 
@@ -27,6 +28,7 @@ def extract_features_and_labels(file_path, selected_features):
 
     return features, labels
 
+
 def create_classifier(train_features, train_labels):
     """Vectorize features and create classifier from training srl_data."""
 
@@ -34,8 +36,9 @@ def create_classifier(train_features, train_labels):
     vec = DictVectorizer()
     train_features_vectorized = vec.fit_transform(train_features)
     classifier.fit(train_features_vectorized, train_labels)
-        
+
     return classifier, vec
+
 
 def create_classifier_using_cross_validation(train_features, train_labels):
     """Vectorize features and create classifier using cross validation for parameter tuning."""
@@ -64,12 +67,13 @@ def create_classifier_using_cross_validation(train_features, train_labels):
 
     return grid.best_estimator_, vec
 
+
 def get_predicted_and_gold_labels(test_path, vectorizer, classifier, selected_features):
     """Vectorize test features and get predictions."""
 
     # we use the same function as above (guarantees features have the same name and form)
     test_features, gold_labels = extract_features_and_labels(test_path, selected_features)
-    
+
     # we need to use the same fitting as before, so now we only transform the current features according to this
     # mapping (using only transform)
     test_features_vectorized = vectorizer.transform(test_features)
@@ -77,6 +81,7 @@ def get_predicted_and_gold_labels(test_path, vectorizer, classifier, selected_fe
     predictions = classifier.predict(test_features_vectorized)
 
     return predictions, gold_labels
+
 
 def run_classifier_and_return_predictions_and_gold(train_path, test_path, selected_features, cross_validation=False):
     """Run classifier and get predictions using default parameters or cross validation."""
@@ -92,6 +97,7 @@ def run_classifier_and_return_predictions_and_gold(train_path, test_path, select
     predictions, gold_labels = get_predicted_and_gold_labels(test_path, vectorizer, classifier, selected_features)
 
     return predictions, gold_labels
+
 
 def generate_confusion_matrix(predictions, gold_labels):
     """Generate a confusion matrix."""
@@ -117,7 +123,8 @@ def calculate_precision_recall_f1_score(predictions, gold_labels, digits=3):
     df_report = df_report.round(digits)
     df_report['support'] = df_report['support'].astype(int)
 
-    return df_report 
+    return df_report
+
 
 def evaluate_classifier(predictions, gold_labels, selected_features, name):
     """Produce full evaluation of classifier."""
@@ -133,6 +140,7 @@ def evaluate_classifier(predictions, gold_labels, selected_features, name):
     print(tabulate(report, headers='keys', tablefmt='psql'))
     # print(report.to_latex())  # print and paste to Overleaf
 
+
 def run_and_evaluate_a_system(train_path, test_path, selected_features, name, cross_validation=False):
     """Run full classification and evaluation of a system."""
 
@@ -143,10 +151,8 @@ def run_and_evaluate_a_system(train_path, test_path, selected_features, name, cr
     else:
         print(f"Running {name.replace('_', ' ')}")
 
-    
     evaluate_classifier(predictions, gold_labels, selected_features, name)
-    
-    
+
 
 selected_features = ['token', 'lemma', 'pos_category', 'pos_tag', 'passive/active',
                      'head', 'dep', 'rel', 'after']
@@ -158,9 +164,9 @@ def main(paths=None) -> None:
         paths = sys.argv[1:]
 
     if not paths:  # if no paths are passed to the function through the command line
-        
+
         paths = ['../raw_data/en_ewt-up-train_preprocessed.conllu',
-                '../raw_data/en_ewt-up-test_preprocessed.conllu']
+                 '../raw_data/en_ewt-up-test_preprocessed.conllu']
 
         train_path = paths[0]
         test_path = paths[1]
