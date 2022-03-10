@@ -219,10 +219,10 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
     df = pd.DataFrame({'tokens': tokens, 'lemmas': lemmas, 'heads': heads, 'named_entities': named_entities,
                        'constituencies': constituencies, 'sentences_for_token': sentences_for_token})
     old_header = ['0', '1','2','3','4','5','6','7','8','9', 'predicate', 'arguments', 'sentence_no', 'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
-    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = old_header)
+    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = 0)
     big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
     write_path = input_path.split('/')[-1].rstrip('.tsv') + '_with_feature' + '.tsv'
-    big_df.to_csv(f"../processed_data/{write_path}", sep='\t', quotechar='|', index=False, header=True)
+    big_df.to_csv(f"../feature_data/{write_path}", sep='\t', quotechar='|', index=False, header=True)
 
 
 def create_feature_files(input_data, loaded_embeddings=''):
