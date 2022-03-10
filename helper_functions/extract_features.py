@@ -126,6 +126,7 @@ def extract_features(input_data):
     heads = []
     lemmas = []
     named_entities = []
+    sentence_for_token = []
 
     df = pd.read_csv(input_data, sep='\t', quotechar='|', header=None)
     df_temp = df.iloc[:, [12, 2]]
@@ -144,6 +145,7 @@ def extract_features(input_data):
         doc = nlp(' '.join(sentence))
         tokens_in_sentence = get_tokens(doc)
         for token in doc:
+            sentence_for_token.append(sentence)
             tokens.append(token)
             heads.append(token.head.text)
             lemmas.append(token.lemma_)
@@ -153,7 +155,7 @@ def extract_features(input_data):
             named_entities.append(ne)
     # hashes = fetch_stanza_hashes(complete_stanza_input) # Stanza currently has a bug where it is unable to handle pretokenized instances of '[', ']'
     # This fetches the indices of problematic cases so we can fix this manually
-    return tokens, lemmas, heads, named_entities, complete_stanza_input
+    return tokens, lemmas, heads, named_entities, complete_stanza_input, sentence_for_token
 
 
 def fetch_stanza_hashes(complete_stanza_input) -> list:
@@ -203,7 +205,7 @@ def get_stanza_paths(path_list, node, overarching_list):
 
 
 def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: list, constituencies: list,
-                      embedding_model, input_path: str):
+                      embedding_model, input_path: str, sentences_for_token):
     '''Takes the features as input and writes a tsv file
     :param tokens: output of extract_features function
     :param lemmas: the lemmatized tokens, also output of extract_features function
@@ -215,8 +217,9 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
     df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies)])
     df = pd.DataFrame({'tokens': tokens, 'lemmas': lemmas, 'heads': heads, 'named_entities': named_entities,
-                       'constituencies': constituencies})
-    old_df = pd.read_csv(input_path, sep='\t', quotechar='|')
+                       'constituencies': constituencies, 'sentences_for_token': sentences_for_token})
+    old_header = ['0', '1','2','3','4','5','6','7','8','9', 'predicate', 'arguments', 'sentence_no', 'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
+    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = old_header)
     big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
     write_path = input_path.split('/')[-1].rstrip('.tsv') + '_with_feature' + '.tsv'
     big_df.to_csv(f"../processed_data/{write_path}", sep='\t', quotechar='|', index=False, header=True)
@@ -224,7 +227,7 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
 
 def create_feature_files(input_data, loaded_embeddings=''):
     embedding_model = loaded_embeddings
-    tokens, lemmas, heads, named_entities, complete_stanza_input = extract_features(input_data)
+    tokens, lemmas, heads, named_entities, complete_stanza_input, sentences_for_token = extract_features(input_data)
     constituencies =  ['not_working' for token in tokens] #get_stanza_constituents(complete_stanza_input)
     # for index, (tok, cons) in enumerate(zip(tokens, constituencies)):
     #     if tok.text != cons[-1]:
@@ -232,7 +235,7 @@ def create_feature_files(input_data, loaded_embeddings=''):
     #         print('Stanza tokenization alignment issue, adding _ to attempt srl_data alignment')
     #         constituencies.insert(index, ['_'])
     #         break
-    write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data)
+    write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data, sentences_for_token)
 
 
 if __name__ == '__main__':
