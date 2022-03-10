@@ -64,7 +64,7 @@ def run_classifier_and_return_predictions_and_gold(train_path, test_path, select
     
     list_dict = {'predict':predictions, 'gold':gold_labels} 
     df = pd.DataFrame(list_dict) 
-    df.to_csv("../output/"+name+'.csv', sep='\t', quotechar='|', index=False)
+    df.to_csv("../output/"+name+'.csv', index=False) 
 
 
 def main(paths=None) -> None:
@@ -74,8 +74,8 @@ def main(paths=None) -> None:
 
     if not paths:  # if no paths are passed to the function through the command line
         
-        paths = ['../feature_data/mini_final_train_with_feature.tsv', # FeatureFile
-                        '../feature_data/mini_final_te_with_feature.tsv']  # Automatic Evaluation
+        paths = ['../processed_data/mini_final_train_with_feature.tsv', # FeatureFile
+                        '../processed_data/mini_final_te_with_feature.tsv']  # Automatic Evaluation
 
     # change the features for different tasks 
     # 0 = token, 1 = spacy_lemma, 2 = head, 3= path, 4 = '?', 5 = '?', 6 = POS, 7 = type 8 = ?, 
@@ -91,6 +91,14 @@ def main(paths=None) -> None:
         print(f'running {name}')
         run_classifier_and_return_predictions_and_gold(train_path, test_path, selected_features, 
                                                        label, name)   
+
+
+# to use in the main.py
+# TODO: Add the default selected features when they are in their final version
+def run_model(input_train_path: str, input_test_path: str, input_selected_features: list, input_label: str, input_name: str):
+    run_classifier_and_return_predictions_and_gold(input_train_path, input_test_path, input_selected_features, 
+                                                       input_label, input_name) 
+
 
 if __name__ == '__main__':
     main()
