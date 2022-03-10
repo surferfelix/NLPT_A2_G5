@@ -219,24 +219,24 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
     old_df = pd.read_csv(input_path, sep='\t', quotechar='|')
     big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
     write_path = input_path.split('/')[-1].rstrip('.tsv') + '_with_feature' + '.tsv'
-    big_df.to_csv(f"processed_data/{write_path}", sep='\t', quotechar='|', index=False, header=True)
+    big_df.to_csv(f"../processed_data/{write_path}", sep='\t', quotechar='|', index=False, header=True)
 
 
 def create_feature_files(input_data, loaded_embeddings=''):
     embedding_model = loaded_embeddings
     tokens, lemmas, heads, named_entities, complete_stanza_input = extract_features(input_data)
-    constituencies = get_stanza_constituents(complete_stanza_input)
-    for index, (tok, cons) in enumerate(zip(tokens, constituencies)):
-        if tok.text != cons[-1]:
-            print(tok, cons)
-            print('Stanza tokenization alignment issue, adding _ to attempt srl_data alignment')
-            constituencies.insert(index, ['_'])
-            break
+    constituencies =  ['not_working' for token in tokens] #get_stanza_constituents(complete_stanza_input)
+    # for index, (tok, cons) in enumerate(zip(tokens, constituencies)):
+    #     if tok.text != cons[-1]:
+    #         print(tok, cons)
+    #         print('Stanza tokenization alignment issue, adding _ to attempt srl_data alignment')
+    #         constituencies.insert(index, ['_'])
+    #         break
     write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data)
 
 
 if __name__ == '__main__':
-    data_paths = ["cleaned_data/mini_final_train.tsv", "cleaned_data/mini_final_test.tsv"]
+    data_paths = ["../cleaned_data/mini_final_train.tsv", "../cleaned_data/mini_final_test.tsv"]
     path_to_emb = '../wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
