@@ -4,7 +4,7 @@ from typing import List
 import csv
 
 def preprocessing_raw_data(raw, file_type):
-    '''Exports preprocessed raw data file'''
+    '''Exports preprocessed raw srl_data file'''
   
     container = []  # List of lists
     with open(raw, encoding = "utf-8") as raw_file:
@@ -16,7 +16,7 @@ def preprocessing_raw_data(raw, file_type):
                 else:
                     container.append(row)
                       
-    with open('../data/clean_raw_'+file_type+'_data.tsv', 'w', encoding = "utf-8", newline = "") as output_file:
+    with open('../srl_data/clean_raw_'+file_type+'_data.tsv', 'w', encoding = "utf-8", newline = "") as output_file:
         writer = csv.writer(output_file, delimiter='\t', quotechar='|')
         # Getting the max line size
         padding_limit = max([len(line) for line in container])
@@ -34,7 +34,7 @@ def preprocessing_raw_data(raw, file_type):
             
 def change_value(preprocessed_data, file_type):
 
-    df = pd.read_csv('../data/clean_raw_'+file_type+'_data.tsv', sep='\t', header=None , encoding = "utf-8",
+    df = pd.read_csv('../srl_data/clean_raw_'+file_type+'_data.tsv', sep='\t', header=None , encoding = "utf-8",
                      keep_default_na=False, quotechar='|', skip_blank_lines=False)
 
     length = len(df.iloc[0].tolist())
@@ -75,13 +75,13 @@ def from_csv_to_json(df, file_type):
             schemas.append(schema)
 
     
-    with open("../data/srl_univprop_en."+file_type+".json", 'w') as f:   
+    with open("../srl_data/srl_univprop_en."+file_type+".json", 'w') as f:
         json.dump(schemas,f,indent=4)
 
 file_type = ['train', 'dev']
 if __name__ == '__main__':
     for file in file_type:
-        path  = "../data/srl_univprop_en."+file+".conll"     
+        path  = "../srl_data/srl_univprop_en."+file+".conll"
         preprocessed_data = preprocessing_raw_data(path, file)
         df = change_value(preprocessed_data, file)
         from_csv_to_json(df, file)

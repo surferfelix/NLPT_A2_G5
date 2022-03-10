@@ -26,7 +26,7 @@ def extract_features_and_labels(file_path, selected_features, label):
     return features, labels
 
 def create_classifier(train_features, train_labels):
-    """Vectorize features and create classifier from training data."""
+    """Vectorize features and create classifier from training srl_data."""
 
     classifier = LinearSVC(random_state=42)
     vec = DictVectorizer()
@@ -69,8 +69,8 @@ def run_classifier_and_return_predictions_and_gold(train_path, test_path, select
 
 def main(paths=None) -> None:
     """Preprocess input file and save a preprocessed version of it."""
-    if not paths:  # if no paths are passed to the function
-        paths = sys.argv[1:]
+    #if not paths:  # if no paths are passed to the function
+    #    paths = sys.argv[1:]
 
     if not paths:  # if no paths are passed to the function through the command line
         

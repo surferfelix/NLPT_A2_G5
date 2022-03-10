@@ -1,0 +1,1 @@
+""" Create srl_data with each predicate """

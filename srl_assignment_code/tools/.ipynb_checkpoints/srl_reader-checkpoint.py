@@ -94,7 +94,7 @@ def _convert_verb_indices_to_wordpiece_indices(verb_indices: List[int], offsets:
 @DatasetReader.register("srl_cltl")
 class SrlReader(DatasetReader):
     """
-    This DatasetReader is designed to read in the English OntoNotes v5.0 data
+    This DatasetReader is designed to read in the English OntoNotes v5.0 srl_data
     for semantic role labelling. It returns a dataset of instances with the
     following fields:
 
