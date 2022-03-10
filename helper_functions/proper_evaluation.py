@@ -55,7 +55,7 @@ def evaluate_classifier(file, name):
 
     print(report)
     # print(report.to_latex())  # print and paste to Overleaf
-    cf_matrix.to_csv(f"evaluations/{name}.csv")
+    cf_matrix.to_csv(f"../evaluations/{name}.csv")
 
 
 def run_evaluation(str_path: str):
@@ -67,3 +67,5 @@ if __name__ == '__main__':
     selected_files = ['../output/arg_classification.csv', '../output/pred_identification.csv',
                       '../output/arg_identification.csv']
     run_evaluation(selected_files[0])
+    run_evaluation(selected_files[1])
+    run_evaluation(selected_files[2])

@@ -13,7 +13,7 @@ test_data_path = sys.argv[1] # string path to the test file, eg 'cleaned_data/fi
 
 """ Feature extraction """
 
-# saves feature to the 'processed_data/feature_file.tsv'
+# saves feature to the 'feature_data/feature_file.tsv'
 input_data = "cleaned_data/final_train.tsv"
 create_feature_files(input_data)
 
