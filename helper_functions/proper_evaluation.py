@@ -2,12 +2,11 @@ import csv
 import sys
 import os
 import pandas as pd
-from tabulate import tabulate
 from sklearn.metrics import classification_report, confusion_matrix
 
 
 def read_file(file):
-    df = pd.read_csv(file, sep=',', encoding="utf-8",
+    df = pd.read_csv(file, sep='\t', encoding="utf-8",
                      keep_default_na=False, quotechar='|', skip_blank_lines=False)
     predictions = df['predict']
     gold_labels = df['gold']
@@ -64,8 +63,8 @@ def run_evaluation(str_path: str):
 
 
 if __name__ == '__main__':
-    selected_files = ['../output/arg_classification.csv', '../output/pred_identification.csv',
-                      '../output/arg_identification.csv']
+    selected_files = ['../output/argument_classification.tsv', '../output/pred_identification.tsv',
+                      '../output/arg_identification.tsv']
     run_evaluation(selected_files[0])
     run_evaluation(selected_files[1])
     run_evaluation(selected_files[2])
