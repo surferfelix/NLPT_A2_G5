@@ -62,7 +62,8 @@ def initialise_spacy():
 
 
 def initialize_stanza():  # In this project we use Stanza for constituency extraction
-    nlp = stanza.Pipeline(lang='en', processors='tokenize, pos, constituency', tokenize_pretokenized=True)
+    nlp = stanza.Pipeline(lang='en', processors='tokenize, pos, constituency', tokenize_pretokenized=True, 
+    tokenize_no_ssplit = True)
     return nlp
 
 
@@ -146,30 +147,44 @@ def extract_features(input_data):
             tokens.append(token)
             heads.append(token.head.text)
             lemmas.append(token.lemma_)
-    return tokens, lemmas, heads, complete_stanza_input
+            ne = token.ent_type_
+            if ne == "":
+                ne = "NONE"
+            named_entities.append(ne)
+    # hashes = fetch_stanza_hashes(complete_stanza_input) # Stanza currently has a bug where it is unable to handle pretokenized instances of '[', ']'
+                        # This fetches the indices of problematic cases so we can fix this manually
+    return tokens, lemmas, heads, named_entities, complete_stanza_input
 
+def fetch_stanza_hashes(complete_stanza_input)-> list:
+    '''Will fetch indices of problematic cases and return these in a list'''
+    hashes = []
+    for sent_index, sentence in enumerate(complete_stanza_input):
+        known_cases = ['[', ']']
+        for case in known_cases:
+            if case in sentence:
+                problem_location = (sent_index, sentence.index(case))
+                hashes.append(problem_location)
+    return hashes
 
 def get_stanza_constituents(complete_stanza_input):
     path_labels = []
     nlp2 = initialize_stanza()
     doc_stanza = nlp2(complete_stanza_input)
     doc_sentences = list(doc_stanza.sentences)
-
     # for each sentence in the text, get the tree paths for the tokens in the sentence
     for i in range(len(doc_sentences)):
-        get_stanza_paths([], doc_sentences[i].constituency.children[0], path_labels)
-
-    print(path_labels, len(path_labels))
+        if i != 0: # Skip header
+            get_stanza_paths([], doc_sentences[i].constituency.children[0], path_labels)
     return path_labels
 
-
+# Function taken from previous assignment and adjusted: https://github.com/efemeryds/NLP-technology-assignment-1/blob/main/code/extract_token_features.py
 def get_stanza_paths(path_list, node, overarching_list):
     """
     Function that creates a constituency tree path for each word in text.
     """
     # check whether there is a syntax tree
     if path_list is None:
-        return
+        return 
     # if so, append current label
     path_list.append(node.label)
     # once you get to leaf, append path of the leaf
@@ -177,14 +192,14 @@ def get_stanza_paths(path_list, node, overarching_list):
         # exclude the leaf/word itself and add to overarching list
         overarching_list.append(path_list)
         # stop function
-        return
+        return overarching_list
     for n in node.children:
         # all children need to have same subpath, which is why .copy() is needed
         # keep getting paths until leaf is reached
         get_stanza_paths(path_list.copy(), n, overarching_list)
 
 
-def write_feature_out(tokens: list, lemmas: list, heads: list, constituencies: list, embedding_model, input_path: str):
+def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities:list, constituencies: list, embedding_model, input_path: str):
     '''Takes the features as input and writes a tsv file
     :param tokens: output of extract_features function
     :param lemmas: the lemmatized tokens, also output of extract_features function
@@ -193,28 +208,36 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, constituencies: l
     :embedding_model: a loaded w2v embedding_model
     '''
     tokens = [token.text for token in tokens]  # Need to conv for embedding loading
-    # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
-    # df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies, embeddings)])
-    df = pd.DataFrame(*[zip(tokens, lemmas, heads, constituencies)])
-    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header=None)
+    #embeddings = get_embedding_representation_of_token(tokens, embedding_model)
+    df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies)])
+    df = pd.DataFrame({'tokens': tokens, 'lemmas': lemmas,'heads':heads, 'named_entities': named_entities, 
+    'constituencies': constituencies})
+    old_df = pd.read_csv(input_path, sep='\t', quotechar='|')
     big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
-    big_df.to_csv('processed_data/feature_file.tsv', sep='\t', quotechar='|', header=None, index=False)
-
+    write_path = input_path.split('/')[-1].rstrip('.tsv') + '_with_feature' + '.tsv'
+    big_df.to_csv(f"processed_data/{write_path}", sep='\t', quotechar='|', index=False, header = True)
 
 def create_feature_files(input_data, loaded_embeddings=''):
     embedding_model = loaded_embeddings
-    tokens, lemmas, heads, complete_stanza_input = extract_features(input_data)
+    tokens, lemmas, heads, named_entities, complete_stanza_input = extract_features(input_data)
     constituencies = get_stanza_constituents(complete_stanza_input)
-    write_feature_out(tokens, lemmas, heads, constituencies, embedding_model, input_data)
-
+    for index, (tok, cons) in enumerate(zip(tokens, constituencies)):
+        if tok.text != cons[-1]:
+            print(tok, cons)
+            print('Stanza tokenization alignment issue, adding _ to attempt data alignment')
+            constituencies.insert(index, ['_'])
+            break 
+    write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data)
 
 if __name__ == '__main__':
-    input_data = "cleaned_data/mini_final_train.tsv"
+    data_paths = ["cleaned_data/mini_final_train.tsv", "cleaned_data/mini_final_test.tsv"]
     path_to_emb = 'wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
     print('Embeddings loaded...')
-    print('Iterating over data..')
     loaded_embeddings = ''
-    create_feature_files(input_data, loaded_embeddings)
+    for input_data in data_paths:
+        print(f'Starting run for {input_data}')
+        print('Iterating over data..')
+        create_feature_files(input_data, loaded_embeddings)
     print('Done')
