@@ -98,17 +98,6 @@ def get_embedding_representation_of_token(tokens: list, embeddingmodel='', dimen
     return vector_reps
 
 
-# def extract_constituencies(input):
-#     '''Will retrieve constituents for each text part in list
-#     :param input: takes a spacy doc object as 
-#     return: returns a container with the constituents after parsing'''
-
-#     # nlp = initialise_spacy()
-#     parser = benepar.Parser('benepar_en3')
-#     input_sentence = benepar.InputSentence(words = input.split())
-#     tree = parser.parse(input_sentence)
-#     return tree
-
 def extract_features(input_data):
     '''Extracts the tokens, lemmas, and heads from the srl_data
     :type input_data: a pd.DataFrame object
@@ -128,8 +117,8 @@ def extract_features(input_data):
     named_entities = []
     sentence_for_token = []
 
-    df = pd.read_csv(input_data, sep='\t', quotechar='|', header=None)
-    df_temp = df.iloc[:, [12, 2]]
+    df = pd.read_csv(input_data, sep='\t', quotechar='|')
+    df_temp = df.iloc[:, [0, 2]]
     df_temp.columns = ['sentence_no', 'tokens']
     df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
 
@@ -153,21 +142,30 @@ def extract_features(input_data):
             if ne == "":
                 ne = "NONE"
             named_entities.append(ne)
-    # hashes = fetch_stanza_hashes(complete_stanza_input) # Stanza currently has a bug where it is unable to handle pretokenized instances of '[', ']'
-    # This fetches the indices of problematic cases so we can fix this manually
+
     return tokens, lemmas, heads, named_entities, complete_stanza_input, sentence_for_token
 
 
-def fetch_stanza_hashes(complete_stanza_input) -> list:
-    '''Will fetch indices of problematic cases and return these in a list'''
-    hashes = []
-    for sent_index, sentence in enumerate(complete_stanza_input):
-        known_cases = ['[', ']']
-        for case in known_cases:
-            if case in sentence:
-                problem_location = (sent_index, sentence.index(case))
-                hashes.append(problem_location)
-    return hashes
+def extract_features_from_file(old_df) -> list:
+    '''Extracts old features from file
+    :param inputfile: pd Dataframe with old pos tags'''
+    pos_tags = old_df['4'].tolist()  # 4 includes the POS tags in the main file
+    prevs = []
+    nexts = []
+    for index, tag in enumerate(pos_tags):
+        # Previous POS
+        try:
+            prev_pos = pos_tags[index - 1]
+        except IndexError:
+            prev_pos = '_'
+        prevs.append(prev_pos)
+        # Next POS
+        try:
+            next_pos = pos_tags[index + 1]
+        except IndexError:
+            next_pos = '_'
+        nexts.append(next_pos)
+    return prevs, nexts
 
 
 def get_stanza_constituents(complete_stanza_input):
@@ -216,32 +214,44 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
     tokens = [token.text for token in tokens]  # Need to conv for embedding loading
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
     # df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies)])
+
+    #old_header = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'predicate', 'arguments', 'sentence_no',
+    #              'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
+    old_df = pd.read_csv(input_path, sep='\t', quotechar='|')
+    prev_pos, next_pos = extract_features_from_file(old_df)
+    everything = [tokens, lemmas, heads, prev_pos, next_pos]
+    for index, i in enumerate(everything):
+        if len(i) != len(tokens):
+            print(index, len(i))
     df = pd.DataFrame({'tokens': tokens, 'lemmas': lemmas, 'heads': heads, 'named_entities': named_entities,
-                       'constituencies': constituencies, 'sentences_for_token': sentences_for_token})
-    old_header = ['0', '1','2','3','4','5','6','7','8','9', 'predicate', 'arguments', 'sentence_no', 'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
-    old_df = pd.read_csv(input_path, sep='\t', quotechar='|', header = 0, names = old_header)
-    # big_df = pd.concat([df, old_df], ignore_index=True, axis=1)
+                       'constituencies': constituencies, 'sentences_for_token': sentences_for_token,
+                       'Prev_pos': prev_pos, 'Next_pos': next_pos})
     big_df = df.merge(old_df, how='inner', left_index=True, right_index=True)
     write_path = input_path.split('/')[-1].rstrip('.tsv') + '_with_feature' + '.tsv'
-    print(f"The COLUMNS ARE: {big_df.columns}")
-    big_df.to_csv(f"../feature_data/{write_path}", sep='\t', quotechar='|', index=False)
- 
+    big_df.to_csv(f"feature_data/{write_path}", sep='\t', quotechar='|', index=False)
+
 
 def create_feature_files(input_data, loaded_embeddings=''):
     embedding_model = loaded_embeddings
     tokens, lemmas, heads, named_entities, complete_stanza_input, sentences_for_token = extract_features(input_data)
-    constituencies =  ['not_working' for token in tokens] #get_stanza_constituents(complete_stanza_input)
+    # DUE TO BUG COULD NOT GET WORKING: WAITING FOR RESOLVING STANZA ISSUE OR 'KEY' PARAMETER IMPLEMENTATION
+    constituencies = ['not_working' for token in tokens]
+    # get_stanza_constituents(complete_stanza_input)
     # for index, (tok, cons) in enumerate(zip(tokens, constituencies)):
     #     if tok.text != cons[-1]:
     #         print(tok, cons)
     #         print('Stanza tokenization alignment issue, adding _ to attempt srl_data alignment')
     #         constituencies.insert(index, ['_'])
     #         break
-    write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data, sentences_for_token)
+    write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data,
+                      sentences_for_token)
 
 
 if __name__ == '__main__':
-    data_paths = ["../cleaned_data/mini_final_train.tsv", "../cleaned_data/mini_final_test.tsv"]
+
+    # data_paths = ["cleaned_data/mini_final_train.tsv", "cleaned_data/mini_final_test.tsv"]
+    # data_paths = ["cleaned_data/mini_final_train.tsv"]
+    data_paths = ["cleaned_data/mini_final_test.tsv"]
     path_to_emb = '../wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
