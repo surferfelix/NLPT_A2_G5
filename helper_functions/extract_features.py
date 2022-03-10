@@ -249,7 +249,7 @@ def create_feature_files(input_data, loaded_embeddings=''):
 
 if __name__ == '__main__':
 
-    data_paths = ["../cleaned_data/mini_final_train.tsv", "../cleaned_data/mini_final_test.tsv"]
+    data_paths = ["../cleaned_data/final_train.tsv", "../cleaned_data/final_test.tsv"]
     path_to_emb = '../wiki_embeddings.txt'  # Add path to embedding model here
     print('Loading Embeddings')
     # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)

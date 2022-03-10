@@ -74,8 +74,8 @@ def main(paths=None) -> None:
 
     if not paths:  # if no paths are passed to the function through the command line
         
-        paths = ['../feature_data/mini_final_train_with_feature.tsv', # FeatureFile
-                        '../feature_data/mini_final_te_with_feature.tsv']  # Automatic Evaluation
+        paths = ['../feature_data/final_train_with_feature.tsv', # FeatureFile
+                        '../feature_data/final_te_with_feature.tsv']  # Automatic Evaluation
 
     # change the features for different tasks 
     # 0 = token, 1 = spacy_lemma, 2 = head, 3= path, 4 = '?', 5 = '?', 6 = POS, 7 = type 8 = ?, 
