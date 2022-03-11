@@ -18,10 +18,16 @@ This project tackles the NLP task of Semantic Role labeling (SRL) with rule base
 
 ### IMPLEMENTED FEATURES
 
-the token
-indices, tokens, lemmas, universal Part-of-Speech tags, language-specific Part-of-Speech tags,
-morphological features, the ID of the head word, the universal dependency relation to the head
-word, as well as head ID - dependency relation pairs
+- tokens
+- indices
+- lemmas
+- universal Part-of-Speech tags
+- language-specific Part-of-Speech tags
+- morphological features
+- the ID of the head word
+- the universal dependency relation to the head
+- word, as well as head ID
+- dependency relation pairs
 
 ### HOW TO USE IT
 - STEP 1. Install libraries specified in **requirements.txt** by running    
