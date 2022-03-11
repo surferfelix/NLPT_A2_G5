@@ -26,8 +26,12 @@ This project tackles the NLP task of Semantic Role labeling (SRL) with rule base
 - morphological features
 - the ID of the head word
 - the universal dependency relation to the head
-- word, as well as head ID
-- dependency relation pairs
+- head words
+- dependency relation:head ID pairs
+- named entities
+- word embeddings
+- PoS-tag of the previous token
+- PoS-tag of the next token
 
 ### HOW TO USE IT
 - STEP 1. Install libraries specified in **requirements.txt** by running    
