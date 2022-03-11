@@ -120,7 +120,5 @@ def run_model(input_train_path: str, input_test_path: str, input_selected_featur
                                                    input_label, input_name)
 
 
-
-
 if __name__ == '__main__':
     main()
