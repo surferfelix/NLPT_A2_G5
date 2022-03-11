@@ -161,11 +161,3 @@ if __name__ == '__main__':
     print(output['words'])
     [print(f"\tVERB: {verb_obj['verb']} | ARGS: {verb_obj['tags']}") for verb_obj in output['verbs']]
     
-    
-file_type = ['train', 'dev']
-if __name__ == '__main__':
-    for file in file_type:
-        path  = "../srl_data/srl_univprop_en."+file+".conll"
-        preprocessed_data = preprocessing_raw_data(path, file)
-        df = change_value(preprocessed_data, file)
-        from_csv_to_json(df, file)

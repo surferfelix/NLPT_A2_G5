@@ -17,7 +17,7 @@ def preprocessing_raw_data(raw, file_type):
                 else:
                     container.append(row)
 
-    with open('../srl_data/clean_raw_' + file_type + '_data.tsv', 'w', encoding="utf-8", newline="") as output_file:
+    with open('../data/clean_raw_' + file_type + '_data.tsv', 'w', encoding="utf-8", newline="") as output_file:
         writer = csv.writer(output_file, delimiter='\t', quotechar='|')
         # Getting the max line size
         padding_limit = max([len(line) for line in container])
@@ -35,7 +35,7 @@ def preprocessing_raw_data(raw, file_type):
 
 
 def change_value(preprocessed_data, file_type):
-    df = pd.read_csv('../srl_data/clean_raw_' + file_type + '_data.tsv', sep='\t', header=None, encoding="utf-8",
+    df = pd.read_csv('../data/clean_raw_' + file_type + '_data.tsv', sep='\t', header=None, encoding="utf-8",
                      keep_default_na=False, quotechar='|', skip_blank_lines=False)
 
     length = len(df.iloc[0].tolist())
@@ -73,7 +73,7 @@ def from_csv_to_json(df, file_type):
             flag += 1
 
             schema = {
-                'sep_words': df.iloc[:, 2].tolist(),
+                'seq_words': df.iloc[:, 2].tolist(),
                 'BIO': df.iloc[:, 12].tolist(),
                 'pred_sense': [i, df.iloc[i, 11], V, df.iloc[i, 5]]
             }
@@ -81,7 +81,7 @@ def from_csv_to_json(df, file_type):
             schemas.append(schema)
 
             # int(schema)
-    with open("../srl_data/srl_univprop_en." + file_type + ".jsonl", 'w') as f:
+    with open("../data/srl_univprop_en." + file_type + ".jsonl", 'w') as f:
         for entry in schemas:
             json.dump(entry, f)
             f.write('\n')
@@ -90,7 +90,7 @@ def from_csv_to_json(df, file_type):
 if __name__ == '__main__':
     file_type = ['train', 'dev']
     for file in file_type:
-        path = "../srl_data/srl_univprop_en." + file + ".conll"
+        path = "../data/srl_univprop_en." + file + ".conll"
         preprocessed_data = preprocessing_raw_data(path, file)
         df = change_value(preprocessed_data, file)
         from_csv_to_json(df, file)

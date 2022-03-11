@@ -267,3 +267,4 @@ class SrlReader(DatasetReader):
 
         fields["metadata"] = MetadataField(metadata_dict)
         return Instance(fields)
+
