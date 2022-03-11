@@ -4,7 +4,6 @@ import os
 import pandas as pd
 from sklearn.svm import LinearSVC
 from sklearn.feature_extraction import DictVectorizer
-from sklearn.metrics import classification_report, confusion_matrix
 from extract_features import get_embedding_pipe
 
 def extract_features_and_labels(file_path, selected_features, label, embedding_path = ''):
@@ -31,11 +30,8 @@ def extract_features_and_labels(file_path, selected_features, label, embedding_p
     if embedding and embedding_path:
         print('Using Embeddings')
         vector_reps = get_embedding_pipe(file_path, embedding_path)# Here i need to add model_path parameter, so thsi is relevant for main
-        print(vector_reps)
     else:
         print(embedding_path, file_path, label, embedding_path)
-
-    # assert all([embedding == False, bool(embedding_path) == True]), 'Please add "embedding" to your selected features'
     return features, labels
 
 def create_classifier(train_features, train_labels):
@@ -91,14 +87,14 @@ def main(paths=None) -> None:
 
     if not paths:  # if no paths are passed to the function through the command line
         
-        paths = ['../feature_data/mini_final_train_with_feature.tsv', # FeatureFile
-                        '../feature_data/mini_final_te_with_feature.tsv', '/Volumes/Samsung_T5/Text_Mining/Models/enwiki_20180420_100d.txt']  # Embedding_Path
+        paths = ['../feature_data/final_train_with_feature.tsv', # FeatureFile
+                        '../feature_data/final_te_with_feature.tsv', '']  # Embedding_Path
 
     # change the features for different tasks 
     # 0 = token, 1 = spacy_lemma, 2 = head, 3= path, 4 = '?', 5 = '?', 6 = POS, 7 = type 8 = ?, 
     # 15 = GOLD PRED, # 16 = GOLD ARG
-    selected_features = ['tokens', 'lemmas', 'heads', 'named_entities', 'sentences_for_token', 'Prev_pos', 'Next_pos',
-    '4', '5', '6', '8', '9', 'embedding']
+    selected_features = ['lemmas', 'heads', 'named_entities', 'sentences_for_token', 'Prev_pos', 'Next_pos',
+    '4', '5', '6', '8', '9']
     train_path = paths[0]
     test_path = paths[1]
     embedding_path = paths[2]
@@ -122,8 +118,6 @@ def run_model(input_train_path: str, input_test_path: str, input_selected_featur
 
     run_classifier_and_return_predictions_and_gold(input_train_path, input_test_path, input_selected_features,
                                                    input_label, input_name)
-
-
 
 
 if __name__ == '__main__':
