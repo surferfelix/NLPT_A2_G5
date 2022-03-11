@@ -15,20 +15,22 @@ test_data_path = sys.argv[1] # string path to the test file, eg 'cleaned_data/fi
 """ Feature extraction """
 
 # saves feature to the 'feature_data/feature_file.tsv'
-input_data = "cleaned_data/final_train.tsv"
+input_data = "cleaned_data/mini_final_train.tsv"
 create_feature_files(input_data)
 
 
 """ Predicates and arguments identification """
 if if_rule_based == 'yes':
+    name = "rule_based"
     print("You chose predicates and arguments identification with RULE BASED method ")
     create_tokens_predicate_dataframe(test_data_path)
     arg_identification = "rule_arg_identification"
     pred_identification = "rule_pred_identification"
 
 else:
-    train_path = 'feature_data/mini_final_train_with_features.tsv'
-    test_path = 'feature_data/mini_final_te_with_features.tsv'
+    name = "svm"
+    train_path = '../feature_data/mini_final_train_with_feature.tsv'
+    test_path = '../feature_data/mini_final_te_with_feature.tsv'
 
     print("You chose predicates and arguments identification with SVM method ")
 
@@ -41,24 +43,24 @@ else:
 """ Arguments classification """
 print("Running arguments classification with SVM method..")
 
-train_path = 'feature_data/mini_final_train_with_features.tsv'
-test_path = 'feature_data/mini_final_te_with_features.tsv'
+train_path = '../feature_data/mini_final_train_with_feature.tsv'
+test_path = '../feature_data/mini_final_te_with_feature.tsv'
 
-# TODO: add classification model
+run_model(train_path, test_path, [], 'arguments', 'argument_classification')
 
 
 """ Evaluation """
-folder_name = "output"
+folder_name = "../output"
 pred_svm_path = "pred_identification"
 
 print("Evaluating arguments identification..")
-run_evaluation(f"{folder_name}/{arg_identification}")
+run_evaluation(f"{folder_name}/{arg_identification}.tsv")
 
 print("Evaluating predicates identification..")
-run_evaluation(f"{folder_name}/{pred_identification}")
+run_evaluation(f"{folder_name}/{pred_identification}.tsv")
 
 print("Evaluating arguments classification..")
-run_evaluation(f"{folder_name}/{pred_svm_path}")
+run_evaluation(f"{folder_name}/{pred_svm_path}.tsv")
 
 
 
