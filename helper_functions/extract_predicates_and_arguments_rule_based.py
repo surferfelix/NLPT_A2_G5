@@ -47,7 +47,7 @@ def is_question(doc):
 
 def initialise_spacy():
     ''' Will initialise the Spacy NLP object '''
-    nlp = spacy.blank('en')
+    nlp = spacy.load("en_core_web_sm")
     return nlp
 
 
@@ -56,19 +56,39 @@ def get_sentence_predicates_and_arguments(input_path: str):
     predicate_list = []
     arguments_list = []
     tokens = []
+    from pathlib import Path
+    import sys
 
+    base_path = Path(__file__).parent
+    d = str(Path().resolve().resolve())
+    sys.path.append(d)
+
+    input_path = str((base_path / input_path).resolve())
     df = pd.read_csv(input_path, sep='\t', quotechar='|')
     df_temp = df.iloc[:, [0, 2]]
     df_temp.columns = ['sentence_no', 'tokens']
     df_temp = df_temp.groupby('sentence_no')['tokens'].apply(list).reset_index()
 
-    nlp = initialise_spacy()
+    token_dict = {}
+    def custom_tokenizer(
+            text):  # https://stackoverflow.com/questions/53594690/is-it-possible-to-use-spacy-with-already-tokenized-input
+        if text in token_dict:
+            return Doc(nlp.vocab, token_dict[text])
+        else:
+            raise ValueError('No tokenization available for input')
+
+    nlp = spacy.load("en_core_web_sm")
+    nlp.tokenizer = custom_tokenizer
+
     sentences = list(df_temp['tokens'])
 
     for i in range(len(sentences)):
         sentence = sentences[i]
+        full_text = ' '.join(sentence)
+        token_dict[full_text] = sentence
+
         # sentence = [x for x in sentence if x]
-        doc = Doc(nlp.vocab, words=sentence)
+        doc = nlp(' '.join(sentence))
 
         subject, verb, attribute = extract_svo(doc)
         subject_list.append([subject])
@@ -108,9 +128,8 @@ def create_tokens_predicate_dataframe(input_path: str):
 
     predicate_final_data.columns = ['predict', 'gold']
     argument_final_data.columns = ['predict', 'gold']
-
-    predicate_final_data.to_csv("../output/rule_arg_identification.tsv", sep='\t', quotechar='|', index=False)
-    argument_final_data.to_csv("../output/rule_pred_identification.tsv", sep='\t', quotechar='|', index=False)
+    predicate_final_data.to_csv("output/rule_arg_identification.tsv", sep='\t', quotechar='|', index=False)
+    argument_final_data.to_csv("output/rule_pred_identification.tsv", sep='\t', quotechar='|', index=False)
 
     return predicate_final_data, argument_final_data
 
