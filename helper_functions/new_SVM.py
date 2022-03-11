@@ -39,13 +39,9 @@ def extract_features_and_labels(file_path, selected_features, label, embedding_p
             labels.append(row[label])
     if embedding and embedding_path:
         print('Using Embeddings')
-        vector_reps = get_embedding_pipe(file_path,
-                                         embedding_path)  # Here i need to add model_path parameter, so thsi is relevant for main
-        print(vector_reps)
+        vector_reps = get_embedding_pipe(file_path, embedding_path)# Here i need to add model_path parameter, so thsi is relevant for main
     else:
         print(embedding_path, file_path, label, embedding_path)
-
-    # assert all([embedding == False, bool(embedding_path) == True]), 'Please add "embedding" to your selected features'
     return features, labels
 
 
@@ -103,10 +99,9 @@ def main(paths=None) -> None:
     #    paths = sys.argv[1:]
 
     if not paths:  # if no paths are passed to the function through the command line
-
-        paths = ['../feature_data/mini_final_train_with_feature.tsv',  # FeatureFile
-                 '../feature_data/mini_final_te_with_feature.tsv',
-                 '/Volumes/Samsung_T5/Text_Mining/Models/enwiki_20180420_100d.txt']  # Embedding_Path
+        
+        paths = ['../feature_data/final_train_with_feature.tsv', # FeatureFile
+                        '../feature_data/final_te_with_feature.tsv', '']  # Embedding_Path
 
     # change the features for different tasks 
     # 0 = token, 1 = spacy_lemma, 2 = head, 3= path, 4 = '?', 5 = '?', 6 = POS, 7 = type 8 = ?, 
