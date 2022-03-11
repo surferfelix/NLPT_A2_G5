@@ -213,10 +213,6 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
     '''
     tokens = [token.text for token in tokens]  # Need to conv for embedding loading
     # embeddings = get_embedding_representation_of_token(tokens, embedding_model)
-    # df = pd.DataFrame([*zip(tokens, lemmas, heads, constituencies)])
-
-    #old_header = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'predicate', 'arguments', 'sentence_no',
-    #              'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
     old_df = pd.read_csv(input_path, sep='\t', quotechar='|')
     prev_pos, next_pos = extract_features_from_file(old_df)
     everything = [tokens, lemmas, heads, prev_pos, next_pos]
@@ -246,15 +242,22 @@ def create_feature_files(input_data, loaded_embeddings=''):
     write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data,
                       sentences_for_token)
 
+def get_embedding_pipe(file, embedding_model_path):
+    '''Reads a tsv file and goes through tokens to match these in embedding model,
+    make sure to set dimensions variable if model not == 100d
+    :param file: file to load tokens from'''
+    infile = pd.read_csv(file, sep = '\t', quotechar = '|')
+    print('Loading Embeddings')
+    loaded_embeddings = KeyedVectors.load_word2vec_format(embedding_model_path)
+    print('Embeddings loaded...')
+    tokens = infile["tokens"].tolist()
+    vector_reps = get_embedding_representation_of_token(file, loaded_embeddings)
+    return vector_reps
 
 if __name__ == '__main__':
 
     data_paths = ["../cleaned_data/final_train.tsv", "../cleaned_data/final_test.tsv"]
     path_to_emb = '../wiki_embeddings.txt'  # Add path to embedding model here
-    print('Loading Embeddings')
-    # loaded_embeddings = KeyedVectors.load_word2vec_format(path_to_emb)
-    print('Embeddings loaded...')
-    loaded_embeddings = ''
     for input_data in data_paths:
         print(f'Starting run for {input_data}')
         print('Iterating over srl_data..')
