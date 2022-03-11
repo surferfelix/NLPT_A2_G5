@@ -35,7 +35,7 @@ def extract_features_and_labels(file_path, selected_features, label, embedding_p
                 if not feature_name == 'embedding':
                     if row[feature_name]:  # if this feature exists
                         feature_dict[feature_name] = row[feature_name]
-                features.append(feature_dict)
+            features.append(feature_dict)
             labels.append(row[label])
     if embedding and embedding_path:
         print('Using Embeddings')
