@@ -42,8 +42,8 @@ This project tackles the NLP task of Semantic Role labeling (SRL) with rule base
     - decide if you want to use embedding as a feature in svm model by stating **'yes'** (with embedding) or **'no'** (without embedding)
     - provide the path to the embedding model **your_model_path** (you can download the text model from https://wikipedia2vec.github.io/wikipedia2vec/pretrained/)
 
-The examplary command would be:
-`python3 main.py 'no' 'no' 'no'`
+- The examplary command would be:    
+    `python3 main.py 'no' 'no' 'no'`
 
 ## A NEURAL SRL SYSTEM 
 
