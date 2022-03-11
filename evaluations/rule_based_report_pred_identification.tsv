@@ -1,0 +1,4 @@
+	precision	recall	f1-score	support
+0	0.956	0.989	0.972	285
+1	0.25	0.071	0.111	14
+macro avg	0.603	0.53	0.542	299
