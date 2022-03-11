@@ -3,9 +3,16 @@ import sys
 import os
 import pandas as pd
 from sklearn.metrics import classification_report, confusion_matrix
+import sys
+from pathlib import Path
+
+base_path = Path(__file__).parent
+d = str(Path().resolve().resolve())
+sys.path.append(d)
 
 
 def read_file(file):
+    file = str((base_path / file).resolve())
     df = pd.read_csv(file, sep='\t', encoding="utf-8",
                      keep_default_na=False, quotechar='|', skip_blank_lines=False)
     predictions = df['predict']
@@ -54,7 +61,10 @@ def evaluate_classifier(file, name):
 
     print(report)
     # print(report.to_latex())  # print and paste to Overleaf
-    cf_matrix.to_csv(f"../evaluations/{name}.csv")
+    report.to_csv(f"evaluations/report_{name}", sep='\t', encoding="utf-8",
+                     quotechar='|')
+    cf_matrix.to_csv(f"evaluations/{name}", sep='\t', encoding="utf-8",
+                     quotechar='|')
 
 
 def run_evaluation(str_path: str):

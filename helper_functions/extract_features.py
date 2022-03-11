@@ -4,7 +4,6 @@ import csv
 from gensim.models import Word2Vec, KeyedVectors
 import spacy
 from spacy.tokens import Doc
-import benepar
 import stanza
 
 
@@ -224,7 +223,7 @@ def write_feature_out(tokens: list, lemmas: list, heads: list, named_entities: l
                        'Prev_pos': prev_pos, 'Next_pos': next_pos})
     big_df = df.merge(old_df, how='inner', left_index=True, right_index=True)
     write_path = input_path.split('/')[-1].rstrip('.tsv') + '_with_feature' + '.tsv'
-    big_df.to_csv(f"../feature_data/{write_path}", sep='\t', quotechar='|', index=False)
+    big_df.to_csv(f"feature_data/{write_path}", sep='\t', quotechar='|', index=False)
 
 
 def create_feature_files(input_data, loaded_embeddings=''):
@@ -242,7 +241,7 @@ def create_feature_files(input_data, loaded_embeddings=''):
     write_feature_out(tokens, lemmas, heads, named_entities, constituencies, embedding_model, input_data,
                       sentences_for_token)
 
-def get_embedding_pipe(file, embedding_model_path):
+def get_embedding_pipe(file, embedding_model_path=''):
     '''Reads a tsv file and goes through tokens to match these in embedding model,
     make sure to set dimensions variable if model not == 100d
     :param file: file to load tokens from'''
@@ -256,10 +255,10 @@ def get_embedding_pipe(file, embedding_model_path):
 
 if __name__ == '__main__':
 
-    data_paths = ["../cleaned_data/final_train.tsv", "../cleaned_data/final_test.tsv"]
+    data_paths = ["../cleaned_data/mini_final_train.tsv", "../cleaned_data/mini_final_test.tsv"]
     path_to_emb = '../wiki_embeddings.txt'  # Add path to embedding model here
     for input_data in data_paths:
         print(f'Starting run for {input_data}')
         print('Iterating over srl_data..')
-        create_feature_files(input_data, loaded_embeddings)
+        create_feature_files(input_data)
     print('Done')

@@ -109,8 +109,8 @@ def create_tokens_predicate_dataframe(input_path: str):
     predicate_final_data.columns = ['predict', 'gold']
     argument_final_data.columns = ['predict', 'gold']
 
-    predicate_final_data.to_csv("output/rule_arg_identification.csv", sep='\t', quotechar='|', index=False)
-    argument_final_data.to_csv("output/rule_pred_identification.csv", sep='\t', quotechar='|', index=False)
+    predicate_final_data.to_csv("../output/rule_arg_identification.tsv", sep='\t', quotechar='|', index=False)
+    argument_final_data.to_csv("../output/rule_pred_identification.tsv", sep='\t', quotechar='|', index=False)
 
     return predicate_final_data, argument_final_data
 
@@ -118,7 +118,7 @@ def create_tokens_predicate_dataframe(input_path: str):
 # gather the user input and gather the info
 
 if __name__ == "__main__":
-    input_data = "cleaned_data/final_test.tsv"
+    input_data = "../cleaned_data/final_test.tsv"
     predicate_final, argument_final = create_tokens_predicate_dataframe(input_data)
 
 
