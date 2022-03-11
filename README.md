@@ -43,7 +43,7 @@ The examplary command would be:
 
 ## A NEURAL SRL SYSTEM 
 
-The code for the SRL system is also present 
+The code for the SRL system is stored in the same repositorium. 
 
 ### HOW TO USE IT
 - STEP 1. Install libraries specified in **requirements.txt** by running    
