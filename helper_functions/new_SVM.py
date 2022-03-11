@@ -112,11 +112,18 @@ def main(paths=None) -> None:
                                                        label, name, embedding_path)   
 
 
-# to use in the main.py
-def run_model(input_train_path: str, input_test_path: str, input_selected_features: list, input_label: str, input_name: str, embedding_path = ''):
 
-    run_classifier_and_return_predictions_and_gold(input_train_path, input_test_path, input_selected_features, 
-                                                    input_label, input_name, embedding_path) 
+# TODO: Add the default selected features when they are in their final version
+def run_model(input_train_path: str, input_test_path: str, input_selected_features: list, input_label: str,
+              input_name: str):
+    if not input_selected_features:
+        input_selected_features = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'predicate', 'arguments',
+                                   'sentence_no', 'argument_number', 'gold_predicate_binary', 'gold_arguments_binary']
+
+    run_classifier_and_return_predictions_and_gold(input_train_path, input_test_path, input_selected_features,
+                                                   input_label, input_name)
+
+
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ for potential parameters (e.g. filepaths) + all of your other scripts. """
 from helper_functions.extract_features import create_feature_files
 from helper_functions.extract_predicates_and_arguments_rule_based import create_tokens_predicate_dataframe
 from helper_functions.proper_evaluation import run_evaluation
+from helper_functions.new_SVM import run_model
 import sys
 
 
@@ -26,29 +27,37 @@ if if_rule_based == 'yes':
     pred_identification = "rule_pred_identification"
 
 else:
-    # TODO: add SVM for identification
+    train_path = 'feature_data/mini_final_train_with_features.tsv'
+    test_path = 'feature_data/mini_final_te_with_features.tsv'
+
     print("You chose predicates and arguments identification with SVM method ")
+
+    run_model(train_path, test_path, [], 'gold_predicate_binary', 'pred_identification')
+    run_model(train_path, test_path, [], 'gold_arguments_binary', 'arg_identification')
     arg_identification = "arg_identification"
     pred_identification = "pred_identification"
 
 
-
 """ Arguments classification """
-print("Runs arguments classification with SVM method")
-# add SVM for classification
+print("Running arguments classification with SVM method..")
+
+train_path = 'feature_data/mini_final_train_with_features.tsv'
+test_path = 'feature_data/mini_final_te_with_features.tsv'
+
+# TODO: add classification model
 
 
 """ Evaluation """
 folder_name = "output"
 pred_svm_path = "pred_identification"
 
-print("Evaluate arguments identification")
+print("Evaluating arguments identification..")
 run_evaluation(f"{folder_name}/{arg_identification}")
 
-print("Evaluate predicates identification")
+print("Evaluating predicates identification..")
 run_evaluation(f"{folder_name}/{pred_identification}")
 
-print("Evaluate arguments classification")
+print("Evaluating arguments classification..")
 run_evaluation(f"{folder_name}/{pred_svm_path}")
 
 
